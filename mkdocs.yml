@@ -1,0 +1,69 @@
+site_name: Quay
+site_description: Chrome DevTools with accessibility-tree semantics for browser automation
+site_url: https://sidonsoft.github.io/quay/
+repo_url: https://github.com/sidonsoft/quay
+repo_name: sidonsoft/quay
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: dark
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: installation.md
+      - Quick Start: quickstart.md
+  - API Reference:
+      - Browser: api/browser.md
+      - Connection: api/connection.md
+      - Errors: api/errors.md
+  - Guides:
+      - Wait Conditions: guides/wait-conditions.md
+      - Cookies: guides/cookies.md
+      - Network Interception: guides/network.md
+      - Keyboard & Mouse: guides/input.md
+      - Reconnection: guides/reconnection.md
+  - Architecture Decisions:
+      - Overview: adr/index.md
+      - ADR-0001 Accessibility Tree: adr/0001-accessibility-tree-approach.md
+      - ADR-0002 Runtime.evaluate Result: adr/0002-runtime-evaluate-result-structure.md
+      - ADR-0003 this Binding: adr/0003-callfunctionon-this-binding.md
+      - ADR-0004 Backend DOM ID: adr/0004-accessibility-node-id.md
+      - ADR-0005 Nested Async: adr/0005-nested-async-handling.md
+  - Internals:
+      - Specification: internals/SPEC.md
+      - Testing Strategy: internals/TESTING_STRATEGY.md
+      - Reconnect Design: internals/RECONNECT_DESIGN.md
+  - Changelog: changelog.md
+  - Roadmap: roadmap.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sidonsoft/quay
