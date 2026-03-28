@@ -119,15 +119,24 @@ class BrowserActionsMixin:
         return self._run_async(_type())  # type: ignore[attr-defined]
 
     def evaluate(self, script: str, tab=None, timeout=None) -> Any:
-        async def _eval():
-            conn = await self._get_connection(tab)  # type: ignore[attr-defined]
-            result = await self._send_cdp(conn, "Runtime.evaluate", {  # type: ignore[attr-defined]
-                "expression": script,
-                "returnByValue": True,
-            }, domains=["Runtime"], timeout=timeout)
-            # CDP Runtime.evaluate returns {"result": {"result": {"value": ...}}}
-            return result.get("result", {}).get("result", {}).get("value")
-        return self._run_async(_eval())  # type: ignore[attr-defined]
+        """Synchronously execute JavaScript and return the result.
+        
+        For use from synchronous code. Use `_evaluate_async` from async contexts.
+        """
+        return self._run_async(self._evaluate_async(script, tab, timeout))  # type: ignore[attr-defined]
+
+    async def _evaluate_async(self, script: str, tab=None, timeout=None) -> Any:
+        """Async version of evaluate for use from async contexts.
+        
+        Use this when calling from within _poll_until or other async methods.
+        """
+        conn = await self._get_connection(tab)  # type: ignore[attr-defined]
+        result = await self._send_cdp(conn, "Runtime.evaluate", {  # type: ignore[attr-defined]
+            "expression": script,
+            "returnByValue": True,
+        }, domains=["Runtime"], timeout=timeout)
+        # CDP Runtime.evaluate returns {"result": {"result": {"value": ...}}}
+        return result.get("result", {}).get("result", {}).get("value")
 
     def screenshot(self, path=None, tab=None, timeout=None, full_page=False) -> bytes | str:
         async def _screenshot():

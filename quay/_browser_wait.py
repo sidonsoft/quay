@@ -63,11 +63,11 @@ class BrowserWaitMixin:
         
         async def _check():
             if selector:
-                result = self.evaluate(f"document.querySelector({escape_js_string(selector)}) !== null", tab=resolved_tab)  # type: ignore[attr-defined]
+                result = await self._evaluate_async(f"document.querySelector({escape_js_string(selector)}) !== null", tab=resolved_tab)  # type: ignore[attr-defined]
                 if result:
                     return True
             if text:
-                result = self.evaluate(f"document.body.innerText.includes({escape_js_string(text)})", tab=resolved_tab)  # type: ignore[attr-defined]
+                result = await self._evaluate_async(f"document.body.innerText.includes({escape_js_string(text)})", tab=resolved_tab)  # type: ignore[attr-defined]
                 if result:
                     return True
             return False
@@ -87,7 +87,7 @@ class BrowserWaitMixin:
 
         async def _check():
             try:
-                current_url = self.evaluate("window.location.href", tab=resolved_tab)  # type: ignore[attr-defined]
+                current_url = await self._evaluate_async("window.location.href", tab=resolved_tab)  # type: ignore[attr-defined]
                 if url and current_url == url:
                     return True
                 if compiled_pattern and compiled_pattern.search(current_url):
@@ -106,7 +106,7 @@ class BrowserWaitMixin:
         check_script = f"(function() {{ const el = document.querySelector({escaped}); if (!el) return false; const style = window.getComputedStyle(el); return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null; }})()"
 
         async def _check(self):
-            return bool(self.evaluate(check_script))  # type: ignore[attr-defined]
+            return bool(await self._evaluate_async(check_script))  # type: ignore[attr-defined]
 
         async def _poll():
             return await self._poll_until(lambda: _check(self), timeout=timeout, poll_interval=poll_interval)
@@ -118,7 +118,7 @@ class BrowserWaitMixin:
         check_script = f"(function() {{ const el = document.querySelector({escaped}); if (!el) return true; const style = window.getComputedStyle(el); return style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null; }})()"
 
         async def _check(self):
-            return bool(self.evaluate(check_script))  # type: ignore[attr-defined]
+            return bool(await self._evaluate_async(check_script))  # type: ignore[attr-defined]
 
         async def _poll():
             return await self._poll_until(lambda: _check(self), timeout=timeout, poll_interval=poll_interval)
@@ -127,7 +127,7 @@ class BrowserWaitMixin:
 
     def wait_for_function(self, js_function: str, timeout: float = 10.0, polling_interval: float = 0.2) -> bool:
         async def _check(self):
-            return bool(self.evaluate(js_function))  # type: ignore[attr-defined]
+            return bool(await self._evaluate_async(js_function))  # type: ignore[attr-defined]
 
         async def _poll():
             return await self._poll_until(lambda: _check(self), timeout=timeout, poll_interval=polling_interval)
