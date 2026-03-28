@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] - 2026-03-29
+
+### Fixed
+
+- **CRITICAL: evaluate() return value parsing** — CDP `Runtime.evaluate` returns `{"result": {"result": {"value": ...}}}`. The wrong nesting level caused `evaluate()` to always return `None`. Now correctly extracts `result.result.value`.
+- **HIGH: click_by_text(0,0) fallback removed** — When an AXNode has no bounding box (e.g., `<title>`, `<meta>`), the code silently clicked at viewport origin (0,0), causing unpredictable behavior. Now raises `BrowserError` with helpful message.
+- **Issue #6: Exception swallowing without logging** — All `except Exception: pass` blocks now log at DEBUG level for observability. WebSocket close errors, message parsing errors, callback errors, and health check failures are now logged.
+
 ## [Unreleased]
 
 ### Fixed
