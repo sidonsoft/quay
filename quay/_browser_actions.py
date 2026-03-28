@@ -20,7 +20,22 @@ def _validate_ref(ref: str) -> None:
         raise ValueError(f"Invalid ref format: {ref!r}. Expected format: 'axnode@<number>' or '<number>'")
 
 
-_KEY_MAP = {"Enter": {"key": "Enter", "code": "Enter", "keyCode": 13, "text": "\r"}}
+_KEY_MAP = {
+    "Enter": {"key": "Enter", "code": "Enter", "keyCode": 13, "text": "\r"},
+    "Space": {"key": "Space", "code": "Space", "keyCode": 32, "text": " "},
+    "Tab": {"key": "Tab", "code": "Tab", "keyCode": 9},
+    "Escape": {"key": "Escape", "code": "Escape", "keyCode": 27},
+    "Backspace": {"key": "Backspace", "code": "Backspace", "keyCode": 8, "text": "\b"},
+    "Delete": {"key": "Delete", "code": "Delete", "keyCode": 46},
+    "ArrowUp": {"key": "ArrowUp", "code": "ArrowUp", "keyCode": 38},
+    "ArrowDown": {"key": "ArrowDown", "code": "ArrowDown", "keyCode": 40},
+    "ArrowLeft": {"key": "ArrowLeft", "code": "ArrowLeft", "keyCode": 37},
+    "ArrowRight": {"key": "ArrowRight", "code": "ArrowRight", "keyCode": 39},
+    "Home": {"key": "Home", "code": "Home", "keyCode": 36},
+    "End": {"key": "End", "code": "End", "keyCode": 35},
+    "PageUp": {"key": "PageUp", "code": "PageUp", "keyCode": 33},
+    "PageDown": {"key": "PageDown", "code": "PageDown", "keyCode": 34},
+}
 
 
 def _key_to_key_definition(key: str, modifiers: int = 0) -> dict:

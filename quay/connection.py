@@ -135,7 +135,7 @@ class Connection:
                     self.on_state_change(new_state)
                 except Exception:
                     # Don't let callback crash the library
-                    pass
+                    pass  # Callback errors are intentionally suppressed
 
     @property
     def is_connected(self) -> bool:

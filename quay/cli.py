@@ -18,7 +18,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
+import tempfile
 
 from .browser import Browser
 
@@ -236,7 +238,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # screenshot
     ss_parser = subparsers.add_parser("screenshot", help="Take screenshot")
-    ss_parser.add_argument("path", nargs="?", default="/tmp/screenshot.png", help="Path to save")
+    ss_parser.add_argument("path", nargs="?", default=os.path.join(tempfile.gettempdir(), "screenshot.png"), help="Path to save")
 
     # html
     subparsers.add_parser("html", help="Get page HTML")

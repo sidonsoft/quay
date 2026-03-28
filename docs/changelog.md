@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2026-03-28
 
+### Fixed
+
+**`_run_async` RuntimeError for Async Contexts (Issue #3)**
+- `_run_async` now raises `RuntimeError` with clear message when called from an already-running async context (e.g., async tests, callbacks)
+- Previous behavior silently returned `asyncio.Task` instead of result, causing confusing bugs
+- Error message suggests using async variants or calling from synchronous context
+
+**Safer JavaScript String Escaping (Issue #4)**
+- `escape_js_string()` now uses `json.dumps()` instead of manual character replacement
+- Proper handling of Unicode, special characters, and edge cases
+
+**Expanded Key Map (Issue #7)**
+- `_KEY_MAP` now includes all common keys: Space, Tab, Escape, Backspace, Delete, Arrow keys, Home, End, PageUp, PageDown
+- Fixed Space key: `key` is now `"Space"` (W3C standard) with `text: " "` for input
+
+**Eval Path Resolution (Issue #10)**
+- `evals.py` now checks bundled evals first (installed package), then dev layout
+- Works correctly for both pip-installed and development environments
+
+**CLI Cross-Platform Temp Directory (Issue #13)**
+- Screenshot default path now uses `tempfile.gettempdir()` instead of hardcoded `/tmp`
+- Works on Windows, macOS, and Linux
+
+### Added
+
+**PEP 561 Marker**
+- Added `quay/py.typed` for proper type hint support
+
 ### Changed
 
 **Architecture Refactoring: Mixin-Based Design**
@@ -23,18 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `_browser_accessibility.py` (73 lines): Accessibility tree parsing
 - `_browser_actions.py` (122 lines): Click, type, screenshot, evaluate
 - `_browser_recording.py` (76 lines): Session recording & playback
-
-### Fixed
-
-**`_run_async` RuntimeError for Async Contexts**
-- `_run_async` now raises `RuntimeError` with clear message when called from an already-running async context (e.g., async tests, callbacks)
-- Previous behavior silently returned `asyncio.Task` instead of result, causing confusing bugs
-- Error message suggests using async variants or calling from synchronous context
-
-**Safer JavaScript String Escaping**
-- `escape_js_string()` now uses `json.dumps()` instead of manual character replacement
-- Proper handling of Unicode, special characters, and edge cases
-- Safer injection of user-provided strings into JavaScript expressions
 
 **Benefits**:
 - Improved maintainability: Each feature in its own file

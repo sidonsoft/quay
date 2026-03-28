@@ -153,11 +153,15 @@ class EvalRunner:
             browser: Browser instance (created if not provided)
         """
         if evals_dir is None:
-            # Default: look for evals/ in project root
-            # __file__ is in src/quay/evals.py
-            # Project root is two levels up
-            project_root = Path(__file__).parent.parent.parent
-            evals_dir = project_root / "evals"
+            # Try bundled evals first (installed package), then dev layout
+            bundled = Path(__file__).parent / "evals"
+            dev = Path(__file__).parent.parent.parent / "evals"
+            if bundled.exists():
+                evals_dir = bundled
+            elif dev.exists():
+                evals_dir = dev
+            else:
+                evals_dir = bundled  # Will be missing, but clear intent
         self.evals_dir = Path(evals_dir)
         self._browser = browser
         self._owns_browser = browser is None
