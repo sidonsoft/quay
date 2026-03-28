@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2026-03-29
+
+### Added
+
+**Comprehensive Test Suite**
+- Added 89 unit tests across 11 test modules
+- `test_models.py` — Tab, AXNode, Action, Recording, ComparisonResult
+- `test_errors.py` — BrowserError hierarchy and context
+- `test_escape.py` — JavaScript string escaping security
+- `test_actions.py` — Key definitions and input handling
+- `test_accessibility.py` — AXNode parsing and search
+- `test_connection.py` — OperationQueue, ConnectionState
+- `test_wait.py` — Wait method signatures
+- `test_browser.py` — Browser composition tests
+- `test_navigation.py` — Navigation and tab methods
+- `test_recording.py` — Recording save/load
+- `test_cli.py` — CLI command tests
+- `conftest.py` — Shared pytest fixtures
+
+**Test Coverage**
+- All core modules tested without Chrome running
+- Mock-based integration tests
+- 100% pass rate on all tests
+
 ## [0.2.3] - 2026-03-29
 
 ### Fixed
