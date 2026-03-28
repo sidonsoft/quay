@@ -98,7 +98,12 @@ from quay.connection import ConnectionPool
 pool = ConnectionPool()
 
 # Get or create connection
-conn = await pool.get(ws_url, tab_id)
+### get_connection(ws_url, tab_id)
+
+Get or create a connection for a tab.
+
+```python
+conn = await pool.get_connection(ws_url, tab_id)
 
 # Close all connections
 await pool.close_all()
