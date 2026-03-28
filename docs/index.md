@@ -6,7 +6,7 @@ Use your authenticated Chrome sessions with agent-browser-style element targetin
 
 [![PyPI version](https://badge.fury.io/py/quay.svg)](https://badge.fury.io/py/quay)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](https://github.com/sidonsoft/quay/blob/main/LICENSE)
 
 ## Why Quay?
 
@@ -96,4 +96,4 @@ google-chrome --remote-debugging-port=9222 &
 
 ## License
 
-MIT License — see [LICENSE](https://github.com/sidonsoft/quay/blob/main/LICENSE)
+Apache-2.0 — see [LICENSE](https://github.com/sidonsoft/quay/blob/main/LICENSE)
