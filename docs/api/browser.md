@@ -10,284 +10,191 @@ from quay import Browser
 browser = Browser(
     host="localhost",
     port=9222,
-    timeout=30.0,
+    timeout=10.0,
+    retry_attempts=0,
+    retry_delay=1.0,
+    pool_rate_limit=None,
+    cache_accessibility=False,
     reconnect=True,
-    reconnect_max_retries=5,
-    reconnect_backoff=0.5,
+    reconnect_max_retries=3,
+    reconnect_backoff=1.0,
     reconnect_callback=None,
 )
 ```
 
+Raises `ConnectionError` if Chrome is not reachable.
+
 ## Tab Management
 
 ### list_tabs()
-List all open tabs. Returns `list[Tab]`.
-```python
-tabs = browser.list_tabs()
-```
+List all open page-type tabs. Returns `list[Tab]`.
 
-### new_tab()
-Create a new tab. Returns `Tab`.
-```python
-tab = browser.new_tab("https://example.com")
-```
+### new_tab(url="about:blank")
+Create a new tab. Navigates to URL if provided. Returns `Tab`.
 
-### activate_tab()
-Switch to a tab.
-```python
-browser.activate_tab(tab)
-```
+### activate_tab(tab_id)
+Bring tab to front. Returns `bool`.
 
-### close_tab()
-Close a tab.
-```python
-browser.close_tab(tab)
-```
+### close_tab(tab=None)
+Close a tab. Accepts `Tab`, tab ID string, or `None` (current tab). Returns `bool`.
 
-### temp_tab()
-Context manager for isolated workflows. Auto-closes on exit.
-```python
-with browser.temp_tab("https://example.com") as tab:
-    browser.click_by_text("Submit")
-# Tab auto-closed
-```
+### temp_tab(url="about:blank", close_on_exit=True)
+Context manager for isolated tab workflows. Auto-closes on exit.
 
-### switch_to_tab()
-Switch to a tab, returns previous tab for easy switching back.
-```python
-previous = browser.switch_to_tab(tab1)
-browser.switch_to_tab(previous)
-```
+### switch_to_tab(tab, focus=True)
+Switch to a tab. Returns the previous tab for switching back.
+
+### get_version()
+Returns `BrowserInfo` with Chrome version and protocol info.
 
 ## Navigation
 
 ### navigate(url, tab=None, timeout=None)
-Navigate to URL. Returns bool.
-```python
-browser.navigate("https://example.com")
-```
+Navigate to URL. Returns `str` (frameId).
 
-### wait_for_load_state(state="load", timeout=None)
-Wait for page load state: "load", "DOMContentLoaded", "complete".
-```python
-browser.wait_for_load_state("complete")
-```
+### goto(url, timeout=None, page_load_timeout=None)
+Creates new tab, navigates, waits for page load. Returns `Tab`.
 
 ## Accessibility Tree
 
-### accessibility_tree(tab=None)
-Get AXNode tree. Returns `AXNode`.
+### accessibility_tree(tab=None, timeout=None, refresh=False, cache=None)
+Get the full Chrome AX tree. Returns `AXNode`.
+
 ```python
 tree = browser.accessibility_tree()
-print(tree.to_tree_str())
-buttons = tree.find_by_role("button")
-elements = tree.find_by_name("Submit")
-node = tree.find("42")
+tree.find("42")              # By ref
+tree.find_by_role("button")  # By role
+tree.find_by_name("Submit")  # By name (case-insensitive)
+tree.find_interactive()      # All interactive elements
 ```
 
-## Click
+## Actions
 
-### click(ref, tab=None, timeout=None, double=False, button="left")
-Click element by ref. Returns bool.
-```python
-browser.click("42")
-browser.click("42", double=True)
-browser.click("42", button="right")
-```
+### click_by_text(text, tab=None, timeout=None, *, double=False, button="left")
+Click element matching visible text. Returns `bool`.
 
-### click_by_text(text, tab=None, timeout=None)
-Click by visible text. Returns bool.
-```python
-browser.click_by_text("Sign in")
-```
-
-## Type
-
-### type_text(ref, text, tab=None, timeout=None)
-Type into element by ref. Returns bool.
-```python
-browser.type_text("42", "Hello")
-```
-
-### type_by_name(name, text, tab=None, timeout=None)
-Type by label/placeholder/name. Returns bool.
-```python
-browser.type_by_name("Email", "user@example.com")
-```
-
-### type_slowly(ref, text, delay=0.05, tab=None, timeout=None)
-Type character by character. Returns bool.
-```python
-browser.type_slowly("42", "Hello", delay=0.1)
-```
-
-## Keyboard
-
-### press_key(key, modifiers=None, tab=None, timeout=None)
-Press key. Modifiers: Control, Shift, Alt, Meta.
-```python
-browser.press_key("Enter")
-browser.press_key("c", modifiers=["Control"])
-```
-
-## Mouse
-
-### hover(ref, tab=None, timeout=None)
-Hover over element. Returns bool.
-```python
-browser.hover("42")
-```
-
-## Form Filling
-
-### fill_form(fields, tab=None, timeout=None, raise_on_error=False)
-Fill form fields. Returns dict[str, bool].
-```python
-browser.fill_form({"Email": "a@b.com", "Password": "secret"})
-```
-
-## Wait Conditions
-
-### wait_for(selector=None, text=None, url=None, timeout=10.0)
-Wait for condition. Returns bool.
-```python
-browser.wait_for(selector="#loading")
-browser.wait_for(text="Welcome")
-browser.wait_for(url="https://example.com/success")
-```
-
-### wait_until(condition, timeout=10.0, interval=0.1)
-Wait for custom condition.
-```python
-browser.wait_until(lambda: browser.evaluate("document.readyState") == "complete")
-```
-
-## Content
-
-### get_html(tab=None)
-Get page HTML. Returns str.
-```python
-html = browser.get_html()
-```
+### type_text(text, tab=None, timeout=None, *, slowly=False)
+Type text into the focused element. Returns `bool`.
 
 ### evaluate(script, tab=None, timeout=None)
-Execute JavaScript. Returns Any.
+Execute JavaScript. Returns `Any`.
+
 ```python
 title = browser.evaluate("document.title")
 ```
 
-### screenshot(path, tab=None, timeout=None)
-Save screenshot. Returns bool.
+### screenshot(path=None, tab=None, timeout=None, full_page=False)
+Capture screenshot. Returns `bytes` or `str` (file path if `path` provided).
+
 ```python
+# Save to file
 browser.screenshot("/tmp/page.png")
+
+# Get as bytes
+data = browser.screenshot()
+
+# Full page
+browser.screenshot("/tmp/full.png", full_page=True)
 ```
 
-### pdf(path, tab=None, timeout=None, **kwargs)
-Generate PDF. Returns str path.
+### compare_screenshots(baseline, current, threshold=0.01)
+Compare two screenshots. Returns `ComparisonResult`.
+
 ```python
-browser.pdf("output.pdf", landscape=True, print_background=True)
+result = browser.compare_screenshots("baseline.png", "current.png")
+if not result.match:
+    print(f"Diff: {result.diff_percentage:.2f}%")
 ```
 
-## Cookies
+### get_html(tab=None, timeout=None)
+Get page HTML. Returns `str`.
 
-### get_cookies(urls=None, tab=None)
-Get cookies. Returns list[dict].
+## Wait Conditions
+
+### wait_for_load_state(state="load", tab=None, timeout=10.0)
+Wait for page load. States: `"load"`, `"DOMContentLoaded"`. Returns `bool`.
+
+### wait_for(selector=None, text=None, tab=None, timeout=10.0)
+Wait for element or text. Returns `bool`.
+
 ```python
-cookies = browser.get_cookies()
+browser.wait_for(selector="#results")
+browser.wait_for(text="Welcome")
 ```
 
-### set_cookies(cookies, tab=None)
-Set cookies.
+### wait_for_url(url=None, pattern=None, tab=None, timeout=10.0)
+Wait for URL. `url` for exact match, `pattern` for regex. Returns `bool`.
+
 ```python
-browser.set_cookies([{"name": "session", "value": "abc", "domain": ".example.com"}])
+browser.wait_for_url(url="https://example.com/dashboard")
+browser.wait_for_url(pattern=r"/users/\d+")
 ```
 
-### delete_cookies(name=None, url=None, domain=None, path=None, tab=None)
-Delete cookies.
+### wait_for_selector_visible(selector, timeout=10.0)
+Wait for element visibility. Returns `bool`.
+
+### wait_for_selector_hidden(selector, timeout=10.0)
+Wait for element to be hidden. Returns `bool`.
+
+### wait_for_function(js_function, timeout=10.0, polling_interval=0.2)
+Wait for JS condition. Returns `bool`.
+
 ```python
-browser.delete_cookies("session")
-browser.delete_cookies()
+browser.wait_for_function("window.dataLoaded === true")
 ```
 
-## Network
-
-### on_request(callback, tab=None)
-Monitor requests.
-```python
-browser.on_request(lambda req: print(req['request']['url']))
-```
-
-### on_response(callback, tab=None)
-Monitor responses.
-```python
-browser.on_response(lambda res: print(res['response']['status']))
-```
-
-### on_request_failed(callback, tab=None)
-Monitor failed requests.
-```python
-browser.on_request_failed(lambda req: print(f"Failed: {req}"))
-```
-
-### clear_interceptors(tab=None)
-Clear all interceptors.
-```python
-browser.clear_interceptors()
-```
-
-## Connection
-
-### is_connected()
-Check if connected. Returns bool.
-```python
-if browser.is_connected(): print("Connected")
-```
-
-### close()
-Close connection.
-```python
-browser.close()
-```
+### wait_for_navigation(tab=None, timeout=10.0, wait_until="load")
+Convenience for `wait_for_load_state`. Returns `bool`.
 
 ## Recording & Playback
 
 ### start_recording(path=None)
-Start recording. Returns Recording.
-```python
-recording = browser.start_recording("session.json")
-```
+Start recording. Returns `Recording`.
 
 ### stop_recording()
-Stop and save. Returns str path.
-```python
-path = browser.stop_recording()
-```
-
-### playback(recording, speed=1.0, verify=False)
-Replay session. Returns bool.
-```python
-browser.playback("session.json", speed=2.0, verify=True)
-```
+Stop and save. Returns `str` (file path).
 
 ### pause_recording() / resume_recording()
-Pause/resume recording.
+Pause/resume action capture.
 
 ### get_recording()
-Get current Recording or None.
+Get current `Recording` or `None`.
 
-## Visual Regression
+### playback(recording, speed=1.0, verify=False)
+Replay session. `recording` is `Recording` or file path. Returns `bool`.
 
-### compare_screenshots(baseline, current, threshold=0.0, output_diff=None, region=None)
-Compare screenshots. Returns ComparisonResult.
+**Whitelisted actions**: `open`, `navigate`, `navigate_back`, `close`, `tabs`, `new_tab`, `close_tab`, `click`, `type`, `press_key`, `eval`, `evaluate`, `screenshot`, `scroll`, `hover`, `drag`, `select_option`, `fill_form`, `file_upload`, `snapshot`, `wait_for`, `wait_for_url`, `wait_for_load_state`, `wait_for_selector_visible`, `wait_for_selector_hidden`, `wait_for_function`, `wait_for_navigation`.
+
+## Connection
+
+### is_connected()
+Check Chrome reachability. Returns `bool`.
+
+### close()
+Close connections and clean up.
+
+Context manager:
 ```python
-result = browser.compare_screenshots("baseline.png", "current.png")
+with Browser() as browser:
+    browser.navigate("https://example.com")
 ```
 
-### screenshot_and_compare(path, baseline, threshold=0.0, output_diff=None, region=None)
-Take and compare. Returns ComparisonResult.
+## Error Handling
 
-### assert_visual_match(baseline, threshold=0.0, update_baseline=False, region=None)
-Assert match. Raises AssertionError if mismatch.
 ```python
-browser.assert_visual_match("baseline.png", threshold=0.01)
+from quay.errors import BrowserError, ConnectionError, TimeoutError, CDPError
+
+try:
+    browser.navigate("https://example.com")
+except ConnectionError as e:
+    print(f"Chrome not reachable: {e}")
+    print(f"Context: {e.context}")  # Dict with url, tab_id, etc.
+except TimeoutError as e:
+    print(f"Timed out after {e.timeout}s: {e.operation}")
+except CDPError as e:
+    print(f"CDP protocol error: {e}")
+except BrowserError as e:
+    print(f"Browser error: {e}")
 ```
+
+See [Error Handling](errors.md) for full error hierarchy.
