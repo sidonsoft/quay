@@ -123,6 +123,26 @@ def on_reconnect(msg):
 browser = Browser(reconnect_callback=on_reconnect)
 ```
 
+## Architecture
+
+Quay uses a **mixin-based architecture** for maintainability:
+
+```python
+class Browser(
+    BrowserCoreMixin,        # Connection lifecycle
+    BrowserTabsMixin,        # Tab management
+    BrowserCDPMixin,         # Low-level CDP
+    BrowserNavigationMixin,  # Navigation
+    BrowserWaitMixin,        # Wait methods
+    BrowserAccessibilityMixin,  # Accessibility tree
+    BrowserActionsMixin,     # User actions
+    BrowserRecordingMixin,   # Session recording
+):
+    pass
+```
+
+See [docs/internals/ARCHITECTURE.md](docs/internals/ARCHITECTURE.md) for details.
+
 ## License
 
 Apache-2.0 - See [LICENSE](LICENSE) for details.

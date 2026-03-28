@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-28
+
+### Changed
+
+**Architecture Refactoring: Mixin-Based Design**
+- Split monolithic `browser.py` (3,151 lines) into 8 focused mixin modules
+- `browser.py` is now 41 lines — just the class composition
+- All public APIs unchanged — `from quay import Browser` works identically
+
+**New Files**:
+- `_browser_core.py` (229 lines): Connection lifecycle, HTTP helpers
+- `_browser_tabs.py` (101 lines): Tab CRUD operations  
+- `_browser_cdp.py` (45 lines): Low-level CDP methods
+- `_browser_navigation.py` (33 lines): Navigation helpers
+- `_browser_wait.py` (109 lines): Wait methods
+- `_browser_accessibility.py` (73 lines): Accessibility tree parsing
+- `_browser_actions.py` (122 lines): Click, type, screenshot, evaluate
+- `_browser_recording.py` (76 lines): Session recording & playback
+
+**Benefits**:
+- Improved maintainability: Each feature in its own file
+- Better testability: Mixins can be tested independently
+- Easier navigation: Max file size ~8KB instead of 116KB
+- Preserved API: Zero breaking changes
+
 ## [0.2.6] - 2026-03-24
 
 ### Fixed
