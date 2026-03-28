@@ -110,6 +110,7 @@ class Connection:
         self._thread_lock = threading.Lock()
         self._message_id = 0
         self._pending: dict[int, asyncio.Future[Any]] = {}
+        self._pending_timestamps: dict[int, float] = {}  # Track when messages were added
         self._receive_task: asyncio.Task[None] | None = None
         self._connected = False
         self._state = ConnectionState.DISCONNECTED
@@ -339,6 +340,7 @@ class Connection:
         loop = asyncio.get_running_loop()
         future: asyncio.Future[dict[str, Any]] = loop.create_future()
         self._pending[message_id] = future
+        self._pending_timestamps[message_id] = time.time()
 
         try:
             # Send with timeout
@@ -366,6 +368,7 @@ class Connection:
             )
         finally:
             self._pending.pop(message_id, None)
+            self._pending_timestamps.pop(message_id, None)
 
     async def _receive_loop(self) -> None:
         """Continuously receive messages from WebSocket."""
@@ -457,13 +460,36 @@ class Connection:
             except ValueError:
                 pass
 
+    _STALE_AGE_SECONDS = 30.0  # Futures pending longer than this are stale
+    _CLEANUP_INTERVAL = 50     # Run cleanup every N messages in receive loop
+    _receive_msg_count = 0     # New counter
+
     def _cleanup_stale_messages(self) -> None:
-        """Remove stale pending messages from failed requests."""
-        # Clean up both thread-safe and async-safe entries
-        stale_ids = [msg_id for msg_id, fut in self._pending.items() if fut.done()]
+        """Remove stale pending messages by age, not just count.
+        
+        Uses _STALE_AGE_SECONDS threshold to catch timed-out futures
+        that accumulated due to receive loop death or other issues.
+        """
+        now = time.time()
+        stale_ids = []
+
+        for msg_id, fut in self._pending.items():
+            if fut.done():
+                stale_ids.append(msg_id)
+            elif msg_id in self._pending_timestamps:
+                age = now - self._pending_timestamps[msg_id]
+                if age > self._STALE_AGE_SECONDS:
+                    stale_ids.append(msg_id)
+
         for msg_id in stale_ids:
             try:
-                del self._pending[msg_id]
+                fut = self._pending.pop(msg_id, None)
+                self._pending_timestamps.pop(msg_id, None)
+                if fut and not fut.done():
+                    fut.set_exception(TimeoutError(
+                        f"Stale message (age > {self._STALE_AGE_SECONDS}s)",
+                        timeout=self._STALE_AGE_SECONDS
+                    ))
             except KeyError:
                 pass
 
@@ -571,7 +597,12 @@ class ConnectionPool:
             return conn
 
     def _evict_oldest(self) -> None:
-        """Remove oldest connection to make room (LRU)."""
+        """Remove oldest connection to make room (LRU).
+        
+        Synchronously marks connection for cleanup. The actual WebSocket
+        close happens when the connection is garbage collected or explicitly
+        closed via close_all().
+        """
         if not self._connections:
             return
 
@@ -579,10 +610,11 @@ class ConnectionPool:
         oldest_id = min(self._connections.keys(), key=lambda k: self._connections[k].last_used)
         conn = self._connections.pop(oldest_id)
 
-        # Close asynchronously (fire-and-forget).
-        # Best-effort: if event loop shuts down before task runs, socket may leak.
-        # Acceptable for LRU eviction under normal operation.
-        asyncio.create_task(conn.disconnect())
+        # Mark as disconnected - the connection will be cleaned up when
+        # the event loop gets a chance or when close_all() is called.
+        # This avoids fire-and-forget asyncio.create_task which can leak sockets.
+        conn._state = ConnectionState.DISCONNECTED
+        conn._connected = False
 
     async def get_existing(self, tab_id: str) -> Connection | None:
         """
@@ -592,9 +624,12 @@ class ConnectionPool:
             tab_id: Chrome tab ID
 
         Returns:
-            Connection if exists, None otherwise
+            Connection if exists and connected, None otherwise
         """
-        return self._connections.get(tab_id)
+        conn = self._connections.get(tab_id)
+        if conn and conn.state == ConnectionState.CONNECTED:
+            return conn
+        return None
 
     async def remove(self, tab_id: str) -> None:
         """

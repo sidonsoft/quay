@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Coroutine, Any
 
 if TYPE_CHECKING:
     pass
@@ -17,6 +16,27 @@ class BrowserWaitMixin:
     
     Requires: BrowserCoreMixin, BrowserActionsMixin (for evaluate)
     """
+
+    async def _poll_until(
+        self,
+        check_fn: Callable[[], Coroutine[Any, Any, bool]],
+        timeout: float,
+        poll_interval: float = 0.2
+    ) -> bool:
+        """Async polling loop helper.
+        
+        Polls check_fn until it returns True or timeout is reached.
+        Uses asyncio.sleep() instead of time.sleep() for async compatibility.
+        """
+        start_time = asyncio.get_event_loop().time()
+        while asyncio.get_event_loop().time() - start_time < timeout:
+            try:
+                if await check_fn():
+                    return True
+            except (ConnectionError, TimeoutError, BrowserError):
+                pass
+            await asyncio.sleep(poll_interval)
+        return False
 
     def wait_for_load_state(self, state="load", tab=None, timeout=10.0) -> bool:
         resolved_tab = self._resolve_tab(tab)  # type: ignore[attr-defined]
@@ -37,29 +57,34 @@ class BrowserWaitMixin:
             raise TimeoutError(f"Wait for load state '{state}' timed out after {timeout}s", timeout=timeout, operation="wait_for_load_state")
         return self._run_async(_wait())  # type: ignore[attr-defined]
 
-    def wait_for(self, selector=None, text=None, tab=None, timeout=10.0) -> bool:
+    def wait_for(self, selector=None, text=None, tab=None, timeout=10.0, poll_interval: float = 0.2) -> bool:
         resolved_tab = self._resolve_tab(tab)  # type: ignore[attr-defined]
-        start = time.time()
-        while time.time() - start <= timeout:
-            try:
-                if selector and self.evaluate(f"document.querySelector({escape_js_string(selector)}) !== null", tab=resolved_tab):  # type: ignore[attr-defined]
+        
+        async def _check():
+            if selector:
+                result = self.evaluate(f"document.querySelector({escape_js_string(selector)}) !== null", tab=resolved_tab)  # type: ignore[attr-defined]
+                if result:
                     return True
-                if text and self.evaluate(f"document.body.innerText.includes({escape_js_string(text)})", tab=resolved_tab):  # type: ignore[attr-defined]
+            if text:
+                result = self.evaluate(f"document.body.innerText.includes({escape_js_string(text)})", tab=resolved_tab)  # type: ignore[attr-defined]
+                if result:
                     return True
-            except (ConnectionError, TimeoutError, BrowserError):
-                pass
-            time.sleep(0.2)
-        return False
+            return False
 
-    def wait_for_url(self, url=None, pattern=None, tab=None, timeout=10.0) -> bool:
+        async def _poll():
+            return await self._poll_until(_check, timeout=timeout, poll_interval=poll_interval)
+
+        return self._run_async(_poll())  # type: ignore[attr-defined]
+
+    def wait_for_url(self, url=None, pattern=None, tab=None, timeout=10.0, poll_interval: float = 0.2) -> bool:
         if url and pattern:
             raise ValueError("Provide either url or pattern, not both")
         if not url and not pattern:
             raise ValueError("Either url or pattern must be provided")
         resolved_tab = self._resolve_tab(tab)  # type: ignore[attr-defined]
         compiled_pattern = re.compile(pattern) if pattern else None
-        start = time.time()
-        while time.time() - start <= timeout:
+
+        async def _check():
             try:
                 current_url = self.evaluate("window.location.href", tab=resolved_tab)  # type: ignore[attr-defined]
                 if url and current_url == url:
@@ -68,43 +93,45 @@ class BrowserWaitMixin:
                     return True
             except (ConnectionError, TimeoutError, BrowserError):
                 pass
-            time.sleep(0.2)
-        return False
+            return False
 
-    def wait_for_selector_visible(self, selector: str, timeout: float = 10.0) -> bool:
-        start = time.time()
-        escaped = escape_js_string(selector)
-        while time.time() - start <= timeout:
-            try:
-                if self.evaluate(f"(function() {{ const el = document.querySelector({escaped}); if (!el) return false; const style = window.getComputedStyle(el); return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null; }})()"):  # type: ignore[attr-defined]
-                    return True
-            except (ConnectionError, TimeoutError, BrowserError):
-                pass
-            time.sleep(0.2)
-        return False
+        async def _poll():
+            return await self._poll_until(_check, timeout=timeout, poll_interval=poll_interval)
 
-    def wait_for_selector_hidden(self, selector: str, timeout: float = 10.0) -> bool:
-        start = time.time()
+        return self._run_async(_poll())  # type: ignore[attr-defined]
+
+    def wait_for_selector_visible(self, selector: str, timeout: float = 10.0, poll_interval: float = 0.2) -> bool:
         escaped = escape_js_string(selector)
-        while time.time() - start <= timeout:
-            try:
-                if self.evaluate(f"(function() {{ const el = document.querySelector({escaped}); if (!el) return true; const style = window.getComputedStyle(el); return style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null; }})()"):  # type: ignore[attr-defined]
-                    return True
-            except (ConnectionError, TimeoutError, BrowserError):
-                pass
-            time.sleep(0.2)
-        return False
+        check_script = f"(function() {{ const el = document.querySelector({escaped}); if (!el) return false; const style = window.getComputedStyle(el); return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null; }})()"
+
+        async def _check(self):
+            return bool(self.evaluate(check_script))  # type: ignore[attr-defined]
+
+        async def _poll():
+            return await self._poll_until(lambda: _check(self), timeout=timeout, poll_interval=poll_interval)
+
+        return self._run_async(_poll())  # type: ignore[attr-defined]
+
+    def wait_for_selector_hidden(self, selector: str, timeout: float = 10.0, poll_interval: float = 0.2) -> bool:
+        escaped = escape_js_string(selector)
+        check_script = f"(function() {{ const el = document.querySelector({escaped}); if (!el) return true; const style = window.getComputedStyle(el); return style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null; }})()"
+
+        async def _check(self):
+            return bool(self.evaluate(check_script))  # type: ignore[attr-defined]
+
+        async def _poll():
+            return await self._poll_until(lambda: _check(self), timeout=timeout, poll_interval=poll_interval)
+
+        return self._run_async(_poll())  # type: ignore[attr-defined]
 
     def wait_for_function(self, js_function: str, timeout: float = 10.0, polling_interval: float = 0.2) -> bool:
-        start = time.time()
-        while time.time() - start <= timeout:
-            try:
-                if self.evaluate(js_function):  # type: ignore[attr-defined]
-                    return True
-            except (ConnectionError, TimeoutError, BrowserError):
-                pass
-            time.sleep(polling_interval)
-        return False
+        async def _check(self):
+            return bool(self.evaluate(js_function))  # type: ignore[attr-defined]
+
+        async def _poll():
+            return await self._poll_until(lambda: _check(self), timeout=timeout, poll_interval=polling_interval)
+
+        return self._run_async(_poll())  # type: ignore[attr-defined]
 
     def wait_for_navigation(self, tab=None, timeout: float = 10.0, wait_until: str = "load") -> bool:
         return self.wait_for_load_state(state=wait_until, tab=self._resolve_tab(tab), timeout=timeout)  # type: ignore[attr-defined]
