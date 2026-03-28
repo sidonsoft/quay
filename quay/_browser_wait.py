@@ -46,7 +46,8 @@ class BrowserWaitMixin:
             while asyncio.get_event_loop().time() - start_time < timeout:
                 try:
                     result = await self._send_cdp(conn, "Runtime.evaluate", {"expression": "document.readyState", "returnByValue": True}, domains=["Runtime"])  # type: ignore[attr-defined]
-                    ready_state = result.get("result", {}).get("value")
+                    # CDP Runtime.evaluate returns {"result": {"result": {"value": ...}}}
+                    ready_state = result.get("result", {}).get("result", {}).get("value")
                     if state == "load" and ready_state == "complete":
                         return True
                     if state == "DOMContentLoaded" and ready_state in ["interactive", "complete"]:
