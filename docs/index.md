@@ -12,10 +12,10 @@ Use your authenticated Chrome sessions with agent-browser-style element targetin
 
 | Tool | Your Sessions | Accessibility Tree | Performance |
 |------|---------------|---------------------|-------------|
-| agent-browser | ❌ Fresh browser | ✅ Built-in refs | Fast |
+| agent-browser | ❌ Fresh browser | ✅ AX refs | Fast |
 | Playwright | ❌ Fresh browser | ❌ CSS selectors | Medium |
 | Chrome DevTools | ✅ Your Chrome | ❌ Raw DOM | Fast |
-| **Quay** | ✅ Your Chrome | ✅ Accessibility refs | Fast |
+| **Quay** | ✅ Your Chrome | ✅ AX refs (raw CDP) | Fast |
 
 **Key advantage:** Use your Gmail, banking, SSO sessions without re-authenticating.
 
