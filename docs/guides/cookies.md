@@ -1,3 +1,7 @@
+> **⚠️ Planned — Not Yet Implemented**
+>
+> The cookie management API (`get_cookies`, `set_cookies`, `delete_cookies`) is planned for a future release. This page documents the intended design. Track progress: [Roadmap](../roadmap.md)
+
 # Cookies
 
 Manage browser cookies for authentication and session handling.

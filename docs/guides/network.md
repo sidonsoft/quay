@@ -1,3 +1,7 @@
+> **⚠️ Planned — Not Yet Implemented**
+>
+> The network interception API (`on_request`, `on_response`, `on_request_failed`) is planned for a future release. This page documents the intended design. Track progress: [Roadmap](../roadmap.md)
+
 # Network Interception
 
 Monitor and intercept HTTP requests and responses.

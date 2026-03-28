@@ -2,6 +2,10 @@
 
 Quay supports recording and replaying browser sessions for testing, debugging, and automation.
 
+> **⚠️ Known Issues**
+>
+> See [Changelog](../changelog.md) for current bugs and limitations. Playback validates actions against a whitelist of allowed operations for security.
+
 ## Recording a Session
 
 To record a session, use `start_recording()` and `stop_recording()`. Actions performed during this period are captured and serialized to JSON.

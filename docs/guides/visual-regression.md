@@ -2,6 +2,10 @@
 
 Quay supports visual regression testing through pixel-by-pixel screenshot comparison.
 
+> **⚠️ Basic Implementation**
+>
+> Screenshot comparison uses byte-by-byte comparison. No perceptual diff or threshold-based comparison yet. For advanced visual testing, consider integrating with tools like Percy or Applitools.
+
 ## Installation
 
 Visual comparison requires the `compare` extra dependencies:
