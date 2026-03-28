@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.7] - 2026-03-29
+
+### Fixed
+
+- **Fix 01: ConnectionPool eviction closes WebSocket** — `_evict_oldest()` now properly awaits `conn.disconnect()` instead of just marking disconnected, preventing socket file descriptor leaks.
+- **Fix 05: Screenshot comparison documentation** — Clarified byte-level comparison limitations, removed misleading threshold usage, added note about Pillow for pixel-level diffing.
+- **Fix 07: Wait methods use async evaluate** — Added `_evaluate_async()` for use from async contexts. Fixed `RuntimeError` when sync `evaluate()` called from within `_poll_until()`.
+- **Fix 08: Eager WeakKeyDictionary init** — `_enabled_domains` now initialized via `_init_cdp_mixin()` called from `BrowserCoreMixin.__init__`, preventing race conditions in concurrent access.
+- **Fix 09: find_by_name word-boundary matching** — Added `exact` and `interactive_only` parameters. Substring matches now use word boundaries (e.g., "Sign" no longer matches "Design"). `click_by_text` defaults to `interactive_only=True`.
+- **Fix 10: type_text clears content** — Added `clear=True` parameter (default). Now sends Ctrl+A + Backspace before typing, matching Playwright's `fill()` behavior for intuitive replacement.
+- **Fix 12: CLI context manager** — All CLI commands now use `browser_context()` context manager for proper Browser cleanup and connection pool release.
+- **Fix 13: Consistent CDP parsing** — Fixed `wait_for_load_state()` to use correct `result.result.value` nesting, matching `evaluate()` and `get_html()`.
+
 ## [0.2.6] - 2026-03-29
 
 ### Fixed
