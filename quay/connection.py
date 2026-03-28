@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import threading
 import time
 import urllib.parse
@@ -22,6 +23,8 @@ from typing import Any
 from websockets.asyncio.client import ClientConnection, connect
 
 from .errors import ConnectionError, TimeoutError, parse_cdp_error
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -131,12 +134,12 @@ class Connection:
         """Update state and trigger callback."""
         if self._state != new_state:
             self._state = new_state
-            if self.on_state_change:
-                try:
-                    self.on_state_change(new_state)
-                except Exception:
-                    # Don't let callback crash the library
-                    pass  # Callback errors are intentionally suppressed
+        if self.on_state_change:
+            try:
+                self.on_state_change(new_state)
+            except Exception as e:
+                # Don't let callback crash the library
+                logger.debug("State change callback raised %s: %s", type(e).__name__, e)
 
     @property
     def is_connected(self) -> bool:
@@ -200,8 +203,8 @@ class Connection:
             if self._ws:
                 try:
                     await self._ws.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug("Error closing WebSocket: %s", e)
                 self._ws = None
 
             self._connected = False
@@ -275,8 +278,8 @@ class Connection:
             for tab in tabs:
                 if tab.get("id") == self.tab_id:
                     return tab.get("webSocketDebuggerUrl")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("Error getting WebSocket URL: %s", e)
         return None
 
     def _next_id(self) -> int:
@@ -393,12 +396,13 @@ class Connection:
                 except json.JSONDecodeError:
                     # Ignore non-JSON messages (events)
                     pass
-                except Exception:
+                except Exception as e:
                     # Ignore errors in message parsing
-                    pass
+                    logger.debug("Error parsing message: %s", e)
         except (asyncio.CancelledError, StopAsyncIteration):
             self._connected = False
-        except Exception:
+        except Exception as e:
+            logger.debug("Receive loop error: %s", e)
             self._connected = False
         finally:
             self._connected = False
@@ -418,9 +422,9 @@ class Connection:
             for callback in self._event_listeners[method]:
                 try:
                     callback(params)
-                except Exception:
+                except Exception as e:
                     # Don't let listener errors break the receive loop
-                    pass
+                    logger.debug("Event listener raised %s: %s", type(e).__name__, e)
 
     def on_event(self, method: str, callback: Callable[[dict], None]) -> None:
         """
@@ -514,7 +518,8 @@ class Connection:
             return "result" in result
         except (TimeoutError, ConnectionError):
             return False
-        except Exception:
+        except Exception as e:
+            logger.debug("Health check failed: %s", e)
             return False
 
     async def ensure_connected(self) -> None:

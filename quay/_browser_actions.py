@@ -75,12 +75,15 @@ class BrowserActionsMixin:
 
             # Click the element at node's bounding box coordinates
             bbox = node.bounding_box if hasattr(node, 'bounding_box') else None
-            if bbox:
-                x = (bbox.get('x', 0) or 0) + (bbox.get('width', 0) or 0) / 2
-                y = (bbox.get('y', 0) or 0) + (bbox.get('height', 0) or 0) / 2
-            else:
-                # Fallback: click at center (placeholder)
-                x, y = 0, 0
+            if not bbox:
+                raise BrowserError(
+                    f"Cannot click element with text '{text}': element has no bounding box. "
+                    f"This may be a non-visual element (e.g., <title>, <meta>). "
+                    f"Node: {node.name} (role={node.role})"
+                )
+            
+            x = (bbox.get('x', 0) or 0) + (bbox.get('width', 0) or 0) / 2
+            y = (bbox.get('y', 0) or 0) + (bbox.get('height', 0) or 0) / 2
 
             await conn.send("Input.dispatchMouseEvent", {
                 "type": "mousePressed",
@@ -122,7 +125,8 @@ class BrowserActionsMixin:
                 "expression": script,
                 "returnByValue": True,
             }, domains=["Runtime"], timeout=timeout)
-            return result.get("result", {}).get("value")
+            # CDP Runtime.evaluate returns {"result": {"result": {"value": ...}}}
+            return result.get("result", {}).get("result", {}).get("value")
         return self._run_async(_eval())  # type: ignore[attr-defined]
 
     def screenshot(self, path=None, tab=None, timeout=None, full_page=False) -> bytes | str:
