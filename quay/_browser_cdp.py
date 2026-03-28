@@ -17,10 +17,9 @@ class BrowserCDPMixin:
     Requires: BrowserCoreMixin, BrowserTabsMixin
     """
 
-    # Cache of enabled domains per connection.
-    # Uses WeakKeyDictionary so cache entries are cleared when connections are GC'd.
-    # Lazy initialization via hasattr to avoid MRO __init__ conflicts.
-    _enabled_domains: weakref.WeakKeyDictionary  # type: ignore[assignment]
+    def _init_cdp_mixin(self) -> None:
+        """Initialize CDP-specific state. Call from Browser.__init__."""
+        self._enabled_domains: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
 
     async def _send_cdp(
         self: "BrowserCoreMixin | BrowserCDPMixin",
@@ -30,10 +29,6 @@ class BrowserCDPMixin:
         domains: list[str] | None = None,
         timeout: float | None = None,
     ) -> dict[str, Any]:
-        # Initialize domain cache lazily
-        if not hasattr(self, '_enabled_domains'):
-            self._enabled_domains = weakref.WeakKeyDictionary()
-        
         # Get or create enabled set for this connection
         enabled = self._enabled_domains.setdefault(conn, set())
         
@@ -58,8 +53,7 @@ class BrowserCDPMixin:
         
         Call this after reconnection since CDP state is lost on disconnect.
         """
-        if hasattr(self, '_enabled_domains'):
-            self._enabled_domains.pop(conn, None)
+        self._enabled_domains.pop(conn, None)
 
     def _get_current_tab(self: "BrowserCoreMixin | BrowserTabsMixin | BrowserCDPMixin"):
         if self._current_tab:

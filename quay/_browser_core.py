@@ -85,6 +85,10 @@ class BrowserCoreMixin:
             "record_depth", default=0
         )
 
+        # Initialize CDP mixin state (avoids lazy init race conditions)
+        if hasattr(self, '_init_cdp_mixin'):
+            self._init_cdp_mixin()
+
         if not self._check_connection():
             connected = False
             if retry_attempts > 0:
