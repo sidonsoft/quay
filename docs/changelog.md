@@ -24,6 +24,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `_browser_actions.py` (122 lines): Click, type, screenshot, evaluate
 - `_browser_recording.py` (76 lines): Session recording & playback
 
+### Fixed
+
+**`_run_async` RuntimeError for Async Contexts**
+- `_run_async` now raises `RuntimeError` with clear message when called from an already-running async context (e.g., async tests, callbacks)
+- Previous behavior silently returned `asyncio.Task` instead of result, causing confusing bugs
+- Error message suggests using async variants or calling from synchronous context
+
+**Safer JavaScript String Escaping**
+- `escape_js_string()` now uses `json.dumps()` instead of manual character replacement
+- Proper handling of Unicode, special characters, and edge cases
+- Safer injection of user-provided strings into JavaScript expressions
+
 **Benefits**:
 - Improved maintainability: Each feature in its own file
 - Better testability: Mixins can be tested independently

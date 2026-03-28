@@ -11,6 +11,8 @@ import urllib.request
 from collections.abc import Callable
 from typing import Any
 
+import json
+
 from .connection import Connection, ConnectionPool, ConnectionState
 from .errors import ConnectionError
 from .models import AXNode, Tab
@@ -23,14 +25,25 @@ DEFAULT_TIMEOUT = 10.0
 
 
 def escape_js_string(text: str) -> str:
-    return (
-        text.replace("\\", "\\\\")
-        .replace("'", "\\'")
-        .replace('"', '\\"')
-        .replace("`", "\\`")
-        .replace("\n", "\\n")
-        .replace("\r", "\\r")
-    )
+    """Safely escape string for JavaScript injection using json.dumps.
+    
+    This properly handles Unicode, special characters, and edge cases
+    that manual escaping misses. Returns the string without surrounding
+    quotes for inline use in JavaScript expressions.
+    
+    Args:
+        text: String to escape
+        
+    Returns:
+        Escaped string safe for JavaScript string literals
+        
+    Example:
+        >>> escape_js_string('Hello "world"')
+        'Hello \\\\"world\\\\"'
+        >>> escape_js_string("Line\\nbreak")
+        'Line\\\\nbreak'
+    """
+    return json.dumps(text)[1:-1]  # Remove surrounding quotes
 
 
 class BrowserCoreMixin:
@@ -114,10 +127,22 @@ class BrowserCoreMixin:
                 return self._loop
 
     def _run_async(self, coro: Any) -> Any:
+        """Execute a coroutine synchronously, returning its result.
+        
+        Raises:
+            RuntimeError: If called from within an already-running async context.
+                Use async variants (e.g., navigate_async) or call from sync context.
+        """
         loop = self._get_loop()
         if threading.current_thread() is threading.main_thread():
             if loop.is_running():
-                return loop.create_task(coro)
+                # Get coroutine name for better error message
+                coro_name = getattr(coro, '__name__', getattr(coro, '__class__', type(coro)).__name__)
+                raise RuntimeError(
+                    f"Cannot call synchronous method from async context. "
+                    f"Method '{coro_name}' was called from an already-running event loop. "
+                    f"Use async variants (e.g., navigate_async) or call from a synchronous context."
+                )
             return loop.run_until_complete(coro)
         future = asyncio.run_coroutine_threadsafe(coro, loop)
         return future.result()
