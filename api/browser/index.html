@@ -1,0 +1,2395 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Chrome DevTools with accessibility-tree semantics for browser automation">
+      
+      
+      
+        <link rel="canonical" href="https://sidonsoft.github.io/quay/api/browser/">
+      
+      
+        <link rel="prev" href="../../quickstart/">
+      
+      
+        <link rel="next" href="../connection/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Browser - Quay</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#browser-api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Quay" class="md-header__button md-logo" aria-label="Quay" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Quay
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Browser
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9zM20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12zm-9.15 3.96h2.3L12 9z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="dark" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sidonsoft/quay" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sidonsoft/quay
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Quay" class="md-nav__button md-logo" aria-label="Quay" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Quay
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sidonsoft/quay" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sidonsoft/quay
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Browser
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Browser
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tab-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tab Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tab Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#list_tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_tabs()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new_taburlaboutblank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        new_tab(url="about:blank")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#activate_tabtab_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        activate_tab(tab_id)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#close_tabtabnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close_tab(tab=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temp_taburlaboutblank-close_on_exittrue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        temp_tab(url="about:blank", close_on_exit=True)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch_to_tabtab-focustrue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        switch_to_tab(tab, focus=True)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_version()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Navigation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Navigation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#navigateurl-tabnone-timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        navigate(url, tab=None, timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gotourl-timeoutnone-page_load_timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        goto(url, timeout=None, page_load_timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessibility-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessibility Tree
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Accessibility Tree">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accessibility_treetabnone-timeoutnone-refreshfalse-cachenone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accessibility_tree(tab=None, timeout=None, refresh=False, cache=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Actions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#click_by_texttext-tabnone-timeoutnone-doublefalse-buttonleft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        click_by_text(text, tab=None, timeout=None, *, double=False, button="left")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type_texttext-tabnone-timeoutnone-slowlyfalse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        type_text(text, tab=None, timeout=None, *, slowly=False)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evaluatescript-tabnone-timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate(script, tab=None, timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screenshotpathnone-tabnone-timeoutnone-full_pagefalse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        screenshot(path=None, tab=None, timeout=None, full_page=False)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare_screenshotsbaseline-current-threshold001" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compare_screenshots(baseline, current, threshold=0.01)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_htmltabnone-timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_html(tab=None, timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wait-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wait Conditions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wait Conditions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_load_statestateload-tabnone-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_load_state(state="load", tab=None, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_forselectornone-textnone-tabnone-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for(selector=None, text=None, tab=None, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_urlurlnone-patternnone-tabnone-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_url(url=None, pattern=None, tab=None, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_selector_visibleselector-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_selector_visible(selector, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_selector_hiddenselector-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_selector_hidden(selector, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_functionjs_function-timeout100-polling_interval02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_function(js_function, timeout=10.0, polling_interval=0.2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_navigationtabnone-timeout100-wait_untilload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_navigation(tab=None, timeout=10.0, wait_until="load")
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recording-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recording &amp; Playback
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recording &amp; Playback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#start_recordingpathnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start_recording(path=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stop_recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stop_recording()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pause_recording-resume_recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pause_recording() / resume_recording()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_recording()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#playbackrecording-speed10-verifyfalse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        playback(recording, speed=1.0, verify=False)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Connection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#is_connected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_connected()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/wait-conditions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Wait Conditions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/cookies/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cookies
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/network/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Network Interception
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/input/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keyboard & Mouse
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/reconnection/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reconnection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0001-accessibility-tree-approach/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0001 Accessibility Tree
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0002-runtime-evaluate-result-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0002 Runtime.evaluate Result
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0003-callfunctionon-this-binding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0003 this Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0004-accessibility-node-id/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0004 Backend DOM ID
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/0005-nested-async-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-0005 Nested Async
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Internals
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Internals
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/SPEC/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/TESTING_STRATEGY/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Strategy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../internals/RECONNECT_DESIGN/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reconnect Design
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tab-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tab Management
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tab Management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#list_tabs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        list_tabs()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new_taburlaboutblank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        new_tab(url="about:blank")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#activate_tabtab_id" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        activate_tab(tab_id)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#close_tabtabnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close_tab(tab=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#temp_taburlaboutblank-close_on_exittrue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        temp_tab(url="about:blank", close_on_exit=True)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#switch_to_tabtab-focustrue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        switch_to_tab(tab, focus=True)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_version()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Navigation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Navigation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#navigateurl-tabnone-timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        navigate(url, tab=None, timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gotourl-timeoutnone-page_load_timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        goto(url, timeout=None, page_load_timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#accessibility-tree" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessibility Tree
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Accessibility Tree">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accessibility_treetabnone-timeoutnone-refreshfalse-cachenone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        accessibility_tree(tab=None, timeout=None, refresh=False, cache=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Actions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#click_by_texttext-tabnone-timeoutnone-doublefalse-buttonleft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        click_by_text(text, tab=None, timeout=None, *, double=False, button="left")
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type_texttext-tabnone-timeoutnone-slowlyfalse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        type_text(text, tab=None, timeout=None, *, slowly=False)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evaluatescript-tabnone-timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        evaluate(script, tab=None, timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#screenshotpathnone-tabnone-timeoutnone-full_pagefalse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        screenshot(path=None, tab=None, timeout=None, full_page=False)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compare_screenshotsbaseline-current-threshold001" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        compare_screenshots(baseline, current, threshold=0.01)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_htmltabnone-timeoutnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_html(tab=None, timeout=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wait-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wait Conditions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Wait Conditions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_load_statestateload-tabnone-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_load_state(state="load", tab=None, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_forselectornone-textnone-tabnone-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for(selector=None, text=None, tab=None, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_urlurlnone-patternnone-tabnone-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_url(url=None, pattern=None, tab=None, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_selector_visibleselector-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_selector_visible(selector, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_selector_hiddenselector-timeout100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_selector_hidden(selector, timeout=10.0)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_functionjs_function-timeout100-polling_interval02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_function(js_function, timeout=10.0, polling_interval=0.2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wait_for_navigationtabnone-timeout100-wait_untilload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        wait_for_navigation(tab=None, timeout=10.0, wait_until="load")
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recording-playback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recording &amp; Playback
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recording &amp; Playback">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#start_recordingpathnone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        start_recording(path=None)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stop_recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        stop_recording()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pause_recording-resume_recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        pause_recording() / resume_recording()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#get_recording" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        get_recording()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#playbackrecording-speed10-verifyfalse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        playback(recording, speed=1.0, verify=False)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#connection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Connection
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Connection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#is_connected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        is_connected()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#close" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        close()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="browser-api-reference">Browser API Reference<a class="headerlink" href="#browser-api-reference" title="Permanent link">&para;</a></h1>
+<p>The main entry point for browser automation.</p>
+<h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">quay</span><span class="w"> </span><span class="kn">import</span> <span class="n">Browser</span>
+
+<span class="n">browser</span> <span class="o">=</span> <span class="n">Browser</span><span class="p">(</span>
+    <span class="n">host</span><span class="o">=</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9222</span><span class="p">,</span>
+    <span class="n">timeout</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+    <span class="n">retry_attempts</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">retry_delay</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">pool_rate_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">cache_accessibility</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">reconnect</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">reconnect_max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">reconnect_backoff</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">reconnect_callback</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Raises <code>ConnectionError</code> if Chrome is not reachable.</p>
+<h2 id="tab-management">Tab Management<a class="headerlink" href="#tab-management" title="Permanent link">&para;</a></h2>
+<h3 id="list_tabs">list_tabs()<a class="headerlink" href="#list_tabs" title="Permanent link">&para;</a></h3>
+<p>List all open page-type tabs. Returns <code>list[Tab]</code>.</p>
+<h3 id="new_taburlaboutblank">new_tab(url="about:blank")<a class="headerlink" href="#new_taburlaboutblank" title="Permanent link">&para;</a></h3>
+<p>Create a new tab. Navigates to URL if provided. Returns <code>Tab</code>.</p>
+<h3 id="activate_tabtab_id">activate_tab(tab_id)<a class="headerlink" href="#activate_tabtab_id" title="Permanent link">&para;</a></h3>
+<p>Bring tab to front. Returns <code>bool</code>.</p>
+<h3 id="close_tabtabnone">close_tab(tab=None)<a class="headerlink" href="#close_tabtabnone" title="Permanent link">&para;</a></h3>
+<p>Close a tab. Accepts <code>Tab</code>, tab ID string, or <code>None</code> (current tab). Returns <code>bool</code>.</p>
+<h3 id="temp_taburlaboutblank-close_on_exittrue">temp_tab(url="about:blank", close_on_exit=True)<a class="headerlink" href="#temp_taburlaboutblank-close_on_exittrue" title="Permanent link">&para;</a></h3>
+<p>Context manager for isolated tab workflows. Auto-closes on exit.</p>
+<h3 id="switch_to_tabtab-focustrue">switch_to_tab(tab, focus=True)<a class="headerlink" href="#switch_to_tabtab-focustrue" title="Permanent link">&para;</a></h3>
+<p>Switch to a tab. Returns the previous tab for switching back.</p>
+<h3 id="get_version">get_version()<a class="headerlink" href="#get_version" title="Permanent link">&para;</a></h3>
+<p>Returns <code>BrowserInfo</code> with Chrome version and protocol info.</p>
+<h2 id="navigation">Navigation<a class="headerlink" href="#navigation" title="Permanent link">&para;</a></h2>
+<h3 id="navigateurl-tabnone-timeoutnone">navigate(url, tab=None, timeout=None)<a class="headerlink" href="#navigateurl-tabnone-timeoutnone" title="Permanent link">&para;</a></h3>
+<p>Navigate to URL. Returns <code>str</code> (frameId).</p>
+<h3 id="gotourl-timeoutnone-page_load_timeoutnone">goto(url, timeout=None, page_load_timeout=None)<a class="headerlink" href="#gotourl-timeoutnone-page_load_timeoutnone" title="Permanent link">&para;</a></h3>
+<p>Creates new tab, navigates, waits for page load. Returns <code>Tab</code>.</p>
+<h2 id="accessibility-tree">Accessibility Tree<a class="headerlink" href="#accessibility-tree" title="Permanent link">&para;</a></h2>
+<h3 id="accessibility_treetabnone-timeoutnone-refreshfalse-cachenone">accessibility_tree(tab=None, timeout=None, refresh=False, cache=None)<a class="headerlink" href="#accessibility_treetabnone-timeoutnone-refreshfalse-cachenone" title="Permanent link">&para;</a></h3>
+<p>Get the full Chrome AX tree. Returns <code>AXNode</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">tree</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">accessibility_tree</span><span class="p">()</span>
+<span class="n">tree</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;42&quot;</span><span class="p">)</span>              <span class="c1"># By ref</span>
+<span class="n">tree</span><span class="o">.</span><span class="n">find_by_role</span><span class="p">(</span><span class="s2">&quot;button&quot;</span><span class="p">)</span>  <span class="c1"># By role</span>
+<span class="n">tree</span><span class="o">.</span><span class="n">find_by_name</span><span class="p">(</span><span class="s2">&quot;Submit&quot;</span><span class="p">)</span>  <span class="c1"># By name (case-insensitive)</span>
+<span class="n">tree</span><span class="o">.</span><span class="n">find_interactive</span><span class="p">()</span>      <span class="c1"># All interactive elements</span>
+</code></pre></div>
+<h2 id="actions">Actions<a class="headerlink" href="#actions" title="Permanent link">&para;</a></h2>
+<h3 id="click_by_texttext-tabnone-timeoutnone-doublefalse-buttonleft">click_by_text(text, tab=None, timeout=None, *, double=False, button="left")<a class="headerlink" href="#click_by_texttext-tabnone-timeoutnone-doublefalse-buttonleft" title="Permanent link">&para;</a></h3>
+<p>Click element matching visible text. Returns <code>bool</code>.</p>
+<h3 id="type_texttext-tabnone-timeoutnone-slowlyfalse">type_text(text, tab=None, timeout=None, *, slowly=False)<a class="headerlink" href="#type_texttext-tabnone-timeoutnone-slowlyfalse" title="Permanent link">&para;</a></h3>
+<p>Type text into the focused element. Returns <code>bool</code>.</p>
+<h3 id="evaluatescript-tabnone-timeoutnone">evaluate(script, tab=None, timeout=None)<a class="headerlink" href="#evaluatescript-tabnone-timeoutnone" title="Permanent link">&para;</a></h3>
+<p>Execute JavaScript. Returns <code>Any</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">title</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;document.title&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="screenshotpathnone-tabnone-timeoutnone-full_pagefalse">screenshot(path=None, tab=None, timeout=None, full_page=False)<a class="headerlink" href="#screenshotpathnone-tabnone-timeoutnone-full_pagefalse" title="Permanent link">&para;</a></h3>
+<p>Capture screenshot. Returns <code>bytes</code> or <code>str</code> (file path if <code>path</code> provided).</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Save to file</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="s2">&quot;/tmp/page.png&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get as bytes</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">screenshot</span><span class="p">()</span>
+
+<span class="c1"># Full page</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">screenshot</span><span class="p">(</span><span class="s2">&quot;/tmp/full.png&quot;</span><span class="p">,</span> <span class="n">full_page</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="compare_screenshotsbaseline-current-threshold001">compare_screenshots(baseline, current, threshold=0.01)<a class="headerlink" href="#compare_screenshotsbaseline-current-threshold001" title="Permanent link">&para;</a></h3>
+<p>Compare two screenshots. Returns <code>ComparisonResult</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">result</span> <span class="o">=</span> <span class="n">browser</span><span class="o">.</span><span class="n">compare_screenshots</span><span class="p">(</span><span class="s2">&quot;baseline.png&quot;</span><span class="p">,</span> <span class="s2">&quot;current.png&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">match</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Diff: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">diff_percentage</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="get_htmltabnone-timeoutnone">get_html(tab=None, timeout=None)<a class="headerlink" href="#get_htmltabnone-timeoutnone" title="Permanent link">&para;</a></h3>
+<p>Get page HTML. Returns <code>str</code>.</p>
+<h2 id="wait-conditions">Wait Conditions<a class="headerlink" href="#wait-conditions" title="Permanent link">&para;</a></h2>
+<h3 id="wait_for_load_statestateload-tabnone-timeout100">wait_for_load_state(state="load", tab=None, timeout=10.0)<a class="headerlink" href="#wait_for_load_statestateload-tabnone-timeout100" title="Permanent link">&para;</a></h3>
+<p>Wait for page load. States: <code>"load"</code>, <code>"DOMContentLoaded"</code>. Returns <code>bool</code>.</p>
+<h3 id="wait_forselectornone-textnone-tabnone-timeout100">wait_for(selector=None, text=None, tab=None, timeout=10.0)<a class="headerlink" href="#wait_forselectornone-textnone-tabnone-timeout100" title="Permanent link">&para;</a></h3>
+<p>Wait for element or text. Returns <code>bool</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">browser</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">selector</span><span class="o">=</span><span class="s2">&quot;#results&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for</span><span class="p">(</span><span class="n">text</span><span class="o">=</span><span class="s2">&quot;Welcome&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="wait_for_urlurlnone-patternnone-tabnone-timeout100">wait_for_url(url=None, pattern=None, tab=None, timeout=10.0)<a class="headerlink" href="#wait_for_urlurlnone-patternnone-tabnone-timeout100" title="Permanent link">&para;</a></h3>
+<p>Wait for URL. <code>url</code> for exact match, <code>pattern</code> for regex. Returns <code>bool</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">browser</span><span class="o">.</span><span class="n">wait_for_url</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://example.com/dashboard&quot;</span><span class="p">)</span>
+<span class="n">browser</span><span class="o">.</span><span class="n">wait_for_url</span><span class="p">(</span><span class="n">pattern</span><span class="o">=</span><span class="sa">r</span><span class="s2">&quot;/users/\d+&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="wait_for_selector_visibleselector-timeout100">wait_for_selector_visible(selector, timeout=10.0)<a class="headerlink" href="#wait_for_selector_visibleselector-timeout100" title="Permanent link">&para;</a></h3>
+<p>Wait for element visibility. Returns <code>bool</code>.</p>
+<h3 id="wait_for_selector_hiddenselector-timeout100">wait_for_selector_hidden(selector, timeout=10.0)<a class="headerlink" href="#wait_for_selector_hiddenselector-timeout100" title="Permanent link">&para;</a></h3>
+<p>Wait for element to be hidden. Returns <code>bool</code>.</p>
+<h3 id="wait_for_functionjs_function-timeout100-polling_interval02">wait_for_function(js_function, timeout=10.0, polling_interval=0.2)<a class="headerlink" href="#wait_for_functionjs_function-timeout100-polling_interval02" title="Permanent link">&para;</a></h3>
+<p>Wait for JS condition. Returns <code>bool</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">browser</span><span class="o">.</span><span class="n">wait_for_function</span><span class="p">(</span><span class="s2">&quot;window.dataLoaded === true&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="wait_for_navigationtabnone-timeout100-wait_untilload">wait_for_navigation(tab=None, timeout=10.0, wait_until="load")<a class="headerlink" href="#wait_for_navigationtabnone-timeout100-wait_untilload" title="Permanent link">&para;</a></h3>
+<p>Convenience for <code>wait_for_load_state</code>. Returns <code>bool</code>.</p>
+<h2 id="recording-playback">Recording &amp; Playback<a class="headerlink" href="#recording-playback" title="Permanent link">&para;</a></h2>
+<h3 id="start_recordingpathnone">start_recording(path=None)<a class="headerlink" href="#start_recordingpathnone" title="Permanent link">&para;</a></h3>
+<p>Start recording. Returns <code>Recording</code>.</p>
+<h3 id="stop_recording">stop_recording()<a class="headerlink" href="#stop_recording" title="Permanent link">&para;</a></h3>
+<p>Stop and save. Returns <code>str</code> (file path).</p>
+<h3 id="pause_recording-resume_recording">pause_recording() / resume_recording()<a class="headerlink" href="#pause_recording-resume_recording" title="Permanent link">&para;</a></h3>
+<p>Pause/resume action capture.</p>
+<h3 id="get_recording">get_recording()<a class="headerlink" href="#get_recording" title="Permanent link">&para;</a></h3>
+<p>Get current <code>Recording</code> or <code>None</code>.</p>
+<h3 id="playbackrecording-speed10-verifyfalse">playback(recording, speed=1.0, verify=False)<a class="headerlink" href="#playbackrecording-speed10-verifyfalse" title="Permanent link">&para;</a></h3>
+<p>Replay session. <code>recording</code> is <code>Recording</code> or file path. Returns <code>bool</code>.</p>
+<p><strong>Whitelisted actions</strong>: <code>open</code>, <code>navigate</code>, <code>navigate_back</code>, <code>close</code>, <code>tabs</code>, <code>new_tab</code>, <code>close_tab</code>, <code>click</code>, <code>type</code>, <code>press_key</code>, <code>eval</code>, <code>evaluate</code>, <code>screenshot</code>, <code>scroll</code>, <code>hover</code>, <code>drag</code>, <code>select_option</code>, <code>fill_form</code>, <code>file_upload</code>, <code>snapshot</code>, <code>wait_for</code>, <code>wait_for_url</code>, <code>wait_for_load_state</code>, <code>wait_for_selector_visible</code>, <code>wait_for_selector_hidden</code>, <code>wait_for_function</code>, <code>wait_for_navigation</code>.</p>
+<h2 id="connection">Connection<a class="headerlink" href="#connection" title="Permanent link">&para;</a></h2>
+<h3 id="is_connected">is_connected()<a class="headerlink" href="#is_connected" title="Permanent link">&para;</a></h3>
+<p>Check Chrome reachability. Returns <code>bool</code>.</p>
+<h3 id="close">close()<a class="headerlink" href="#close" title="Permanent link">&para;</a></h3>
+<p>Close connections and clean up.</p>
+<p>Context manager:
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Browser</span><span class="p">()</span> <span class="k">as</span> <span class="n">browser</span><span class="p">:</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">navigate</span><span class="p">(</span><span class="s2">&quot;https://example.com&quot;</span><span class="p">)</span>
+</code></pre></div></p>
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">quay.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">BrowserError</span><span class="p">,</span> <span class="ne">ConnectionError</span><span class="p">,</span> <span class="ne">TimeoutError</span><span class="p">,</span> <span class="n">CDPError</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">browser</span><span class="o">.</span><span class="n">navigate</span><span class="p">(</span><span class="s2">&quot;https://example.com&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ConnectionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Chrome not reachable: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Context: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">context</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Dict with url, tab_id, etc.</span>
+<span class="k">except</span> <span class="ne">TimeoutError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Timed out after </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">timeout</span><span class="si">}</span><span class="s2">s: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">operation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">CDPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CDP protocol error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">BrowserError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Browser error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>See <a href="../errors/">Error Handling</a> for full error hierarchy.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/sidonsoft/quay" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
