@@ -66,14 +66,14 @@ Quay development timeline.
 - [ ] Example scripts
 - [ ] Comparison benchmarks
 
-## v0.4.0 — Advanced ✅
+## v0.4.0 — Advanced
 
 **Goal**: Enterprise features
 
-- [ ] PDF generation
-- [ ] Multi-tab coordination
-- [ ] Recording/Playback
-- [ ] Screenshot comparison
+- [ ] PDF generation — **Not implemented**
+- [ ] Multi-tab coordination — **Not implemented**
+- [x] Recording/Playback — Implemented (see known bugs in changelog)
+- [x] Screenshot comparison — Basic byte comparison implemented
 
 ---
 
@@ -85,7 +85,7 @@ Quay development timeline.
 | ~~WebSocket reconnection~~ | ~~P1~~ | ✅ Done |
 | Documentation site | P2 | Pending |
 | Improved form detection | P2 | Pending |
-| PDF generation | P3 | Pending |
+| PDF generation | P3 | *Not implemented* |
 
 ## Effort Legend
 
