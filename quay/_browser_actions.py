@@ -100,9 +100,49 @@ class BrowserActionsMixin:
             return True
         return self._run_async(_click())  # type: ignore[attr-defined]
 
-    def type_text(self, text: str, tab=None, timeout=None, *, slowly=False) -> bool:
+    def type_text(self, text: str, tab=None, timeout=None, *, slowly=False, clear: bool = True) -> bool:
+        """Type text into the currently focused element.
+        
+        Args:
+            text: Text to type.
+            tab: Target tab (uses current tab if None).
+            timeout: Connection timeout.
+            slowly: If True, add 50ms delay between keystrokes.
+            clear: If True, select all and delete existing content before typing.
+                   Default True for intuitive behavior (type_text replaces content).
+        
+        Returns:
+            True on success.
+        """
         async def _type():
             conn = await self._get_connection(tab)  # type: ignore[attr-defined]
+            
+            if clear:
+                # Select all (Ctrl+A on Windows/Linux, Cmd+A on Mac)
+                await conn.send("Input.dispatchKeyEvent", {
+                    "type": "keyDown",
+                    "key": "a",
+                    "code": "KeyA",
+                    "modifiers": 2,  # Ctrl key (1) + Meta key (4) - we use Ctrl
+                })
+                await conn.send("Input.dispatchKeyEvent", {
+                    "type": "keyUp",
+                    "key": "a",
+                    "code": "KeyA",
+                    "modifiers": 2,
+                })
+                # Delete selected content
+                await conn.send("Input.dispatchKeyEvent", {
+                    "type": "keyDown",
+                    "key": "Backspace",
+                    "code": "Backspace",
+                })
+                await conn.send("Input.dispatchKeyEvent", {
+                    "type": "keyUp",
+                    "key": "Backspace",
+                    "code": "Backspace",
+                })
+            
             for char in text:
                 await conn.send("Input.dispatchKeyEvent", {
                     "type": "keyDown",
