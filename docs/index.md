@@ -12,12 +12,12 @@ Use your authenticated Chrome sessions with agent-browser-style element targetin
 
 | Tool | Your Sessions | Accessibility Tree | Performance |
 |------|---------------|---------------------|-------------|
-| agent-browser | ❌ Fresh browser | ✅ AX refs | Fast |
-| Playwright | ❌ Fresh browser | ❌ CSS selectors | Medium |
-| Chrome DevTools | ✅ Your Chrome | ❌ Raw DOM | Fast |
-| **Quay** | ✅ Your Chrome | ✅ AX refs (raw CDP) | Fast |
+| agent-browser | ❌ Fresh browser | ✅ Full CDP tree + refs | Fast |
+| Playwright | ❌ Fresh browser | ⚠️ Simplified snapshot | Medium |
+| Chrome DevTools | ✅ Your Chrome | ❌ Raw protocol only | Fast |
+| **Quay** | ✅ Your Chrome | ✅ Full CDP tree + refs | Fast |
 
-**Key advantage:** Use your Gmail, banking, SSO sessions without re-authenticating.
+**Key advantage:** Use your Gmail, banking, SSO sessions without re-authenticating. Full Chrome accessibility tree for semantic element targeting with `ref` IDs.
 
 ## Installation
 
@@ -34,40 +34,41 @@ from quay import Browser
 browser = Browser()
 
 # Navigate
-browser.navigate("https://github.com")
+browser.goto("https://github.com")
+# Or: browser.navigate("https://github.com")
 
 # Get accessibility tree (like agent-browser)
 tree = browser.accessibility_tree()
 print(tree.to_tree_str())
 
-# Click by accessibility ref
-browser.click("42")
+# Find elements by role
+buttons = tree.find_by_role("button")
 
-# Or click by text
+# Click by visible text
 browser.click_by_text("Sign in")
 
-# Fill form
-browser.fill_form({"Email": "user@example.com", "Password": "secret"})
+# Type into focused element
+browser.click_by_text("Email")
+browser.type_text("user@example.com")
 
 # Screenshot
 browser.screenshot("/tmp/page.png")
 
-# Execute JavaScript
-title = browser.evaluate("document.title")
+# Wait for conditions
+browser.wait_for(text="Welcome")
+browser.wait_for_url(pattern=r"/dashboard")
 ```
 
 ## Features
 
 - ✅ **Your authenticated sessions** — Use Chrome you're already logged into
-- ✅ **Accessibility tree** — Parse pages like agent-browser
-- ✅ **Click by ref or text** — No brittle CSS selectors
-- ✅ **Form filling** — Label association, name/id, placeholder
+- ✅ **Accessibility tree** — Full CDP accessibility tree with ref targeting
+- ✅ **Click by text** — Click elements by visible text
 - ✅ **Wait conditions** — `wait_for(selector=)`, `wait_for(text=)`, `wait_for(url=)`
-- ✅ **Cookies** — Get, set, delete cookies
-- ✅ **Network interception** — Monitor requests/responses
-- ✅ **Keyboard & mouse** — `press_key()`, `type_slowly()`, `hover()`
-- ✅ **Automatic reconnection** — Recovers from WebSocket disconnects
 - ✅ **Multi-tab support** — List, create, activate, close tabs
+- ✅ **Recording & playback** — Record sessions for replay
+- ✅ **Screenshot comparison** — Basic byte-by-byte comparison
+- ✅ **Automatic reconnection** — Recovers from WebSocket disconnects
 - ✅ **Type hints** — Full type hint coverage
 - ✅ **Python 3.10+** — Modern async/await
 

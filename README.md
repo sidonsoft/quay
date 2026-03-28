@@ -10,13 +10,16 @@
 
 | Feature | Quay | Playwright | agent-browser | Raw CDP |
 |---------|------|------------|---------------|---------|
-| Full AX tree (raw CDP nodes) | ✅ | ❌ Simplified only | ✅ | ❌ |
+| Full AX tree (raw CDP nodes) | ✅ | ❌ Simplified snapshot only | ✅ | ❌ |
+| AX ref targeting | ✅ | ❌ | ✅ | ❌ |
 | Uses your logged-in Chrome | ✅ | ❌ | ❌ | ✅ |
-| Connection pooling | ✅ | N/A | ❌ | ❌ |
-| Auto-reconnect | ✅ | N/A | ❌ | ❌ |
+| Connection pooling | ✅ | ✅ BrowserContext | ❌ | ❌ |
+| Auto-reconnect | ✅ | ❌ | ❌ | ❌ |
 | Python-native | ✅ | ✅ | ❌ JS/TS | ❌ |
-| Session recording | ✅ | ❌ | ❌ | ❌ |
-| Weight | ~20KB | ~MB | ~MB | ~5KB |
+| Session recording | ✅ | ✅ Codegen/trace | ❌ | ❌ |
+| Package size | ~20KB | ~50MB | ~5MB | ~5KB |
+
+**Quay's niche:** Full Chrome accessibility tree + your existing authenticated sessions.
 
 ## Installation
 
