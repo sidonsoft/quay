@@ -80,21 +80,60 @@ class AXNode:
             results.extend(child.find_by_role(role))
         return results
 
-    def find_by_name(self, text: str | None) -> list[AXNode]:
+    def find_by_name(
+        self, text: str | None, *, exact: bool = False, interactive_only: bool = False
+    ) -> list[AXNode]:
         """
-        Find nodes containing text in accessible name (case-insensitive).
+        Find nodes containing text in accessible name.
 
         Args:
             text: Text pattern to search for. Empty string or None returns no results.
+            exact: If True, match name exactly (case-insensitive). If False, match
+                   substrings but require word boundaries (e.g., "Sign" matches "Sign"
+                   but not "Design"). Default False.
+            interactive_only: If True, only return interactive elements (buttons,
+                              links, inputs). Default False.
+
+        Returns:
+            List of matching AXNode instances.
         """
         if not text:
             return []
 
         results = []
-        if text.lower() in self.name.lower():
-            results.append(self)
+        text_lower = text.lower()
+        name_lower = self.name.lower()
+
+        # Check match type
+        if exact:
+            matches = name_lower == text_lower
+        else:
+            # Substring with word boundaries to avoid matching "Design" for "Sign"
+            import re
+
+            # Match text as whole word or at word boundaries
+            pattern = re.compile(rf"(^|\b){re.escape(text_lower)}(\b|$)", re.IGNORECASE)
+            matches = bool(pattern.search(self.name))
+
+        if matches:
+            if not interactive_only or self.role in {
+                "link",
+                "button",
+                "textbox",
+                "checkbox",
+                "radio",
+                "combobox",
+                "searchbox",
+                "spinbutton",
+                "slider",
+                "menuitem",
+                "tab",
+                "switch",
+            }:
+                results.append(self)
+
         for child in self.children:
-            results.extend(child.find_by_name(text))
+            results.extend(child.find_by_name(text, exact=exact, interactive_only=interactive_only))
         return results
 
     def find_interactive(self) -> list[AXNode]:

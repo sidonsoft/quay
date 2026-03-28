@@ -64,8 +64,8 @@ class BrowserActionsMixin:
                     raise BrowserError("No tab available for click")
                 target_tab = tabs[0]
 
-            # Find element by text in the accessibility tree
-            nodes = self.find_by_name(text, tab=target_tab, timeout=timeout)  # type: ignore[attr-defined]
+            # Find element by text in the accessibility tree (interactive elements only)
+            nodes = self.find_by_name(text, tab=target_tab, timeout=timeout, interactive_only=True)  # type: ignore[attr-defined]
             if not nodes:
                 raise BrowserError(f"Element with text '{text}' not found")
             node = nodes[0]

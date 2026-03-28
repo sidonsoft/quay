@@ -69,8 +69,21 @@ class BrowserAccessibilityMixin:
     def find_by_role(self, role: str, tab=None, timeout=None) -> list[AXNode]:
         return self.accessibility_find(lambda n: n.role == role, tab=tab, timeout=timeout)
 
-    def find_by_name(self, name: str, tab=None, timeout=None) -> list[AXNode]:
-        return self.accessibility_find(lambda n: name in n.name, tab=tab, timeout=timeout)
+    def find_by_name(self, name: str, tab=None, timeout=None, *, exact: bool = False, interactive_only: bool = False) -> list[AXNode]:
+        """Find nodes by accessible name.
+        
+        Args:
+            name: Text to search for.
+            tab: Target tab (uses current tab if None).
+            timeout: Connection timeout.
+            exact: If True, match name exactly. If False, use word-boundary matching.
+            interactive_only: If True, only return interactive elements.
+        
+        Returns:
+            List of matching AXNode instances.
+        """
+        tree = self.accessibility_tree(tab=tab, timeout=timeout)
+        return tree.find_by_name(name, exact=exact, interactive_only=interactive_only)
 
     def find_by_value(self, value: str, tab=None, timeout=None) -> list[AXNode]:
         return self.accessibility_find(lambda n: value in n.value, tab=tab, timeout=timeout)
