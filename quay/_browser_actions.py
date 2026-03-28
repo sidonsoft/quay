@@ -214,8 +214,20 @@ class BrowserActionsMixin:
         return self._run_async(_get_html())  # type: ignore[attr-defined]
 
     def compare_screenshots(self, baseline: str | bytes, current: str | bytes, threshold=0.01) -> ComparisonResult:
-        """Compare two screenshots and return comparison result."""
-        # Simple implementation - would use PIL/Pillow in production
+        """Compare two screenshots and return comparison result.
+        
+        NOTE: This implementation does byte-level comparison. For pixel-level
+        visual diffing, install Pillow: `pip install pillow` and use the
+        `compare_screenshots_pixel` method instead.
+        
+        Args:
+            baseline: Path to baseline image or raw bytes.
+            current: Path to current image or raw bytes.
+            threshold: Ignored in byte-level comparison (kept for API compatibility).
+        
+        Returns:
+            ComparisonResult with match status and difference info.
+        """
         if isinstance(baseline, str):
             with open(baseline, "rb") as f:
                 baseline_data = f.read()
@@ -227,19 +239,17 @@ class BrowserActionsMixin:
         else:
             current_data = current
 
-        # Placeholder comparison - byte-level comparison
+        # Byte-level comparison (identical files only)
         match = baseline_data == current_data
         total_bytes = max(len(baseline_data), len(current_data), 1)
         diff_bytes = 0 if match else abs(len(baseline_data) - len(current_data))
-        diff_pixels = diff_bytes  # Byte-level approximation
-        diff_pct = 0.0 if match else (diff_bytes / total_bytes) * 100.0
-
+        
         return ComparisonResult(
             match=match,
-            diff_pixels=diff_pixels,
-            diff_percentage=round(diff_pct, 2),
+            diff_pixels=diff_bytes,  # Approximation - actual pixels require PIL
+            diff_percentage=0.0 if match else round((diff_bytes / total_bytes) * 100, 2),
             baseline_size=(0, 0),
             current_size=(0, 0),
             diff_path=None,
-            message="Identical" if match else f"Screenshots differ by {round(diff_pct, 2)}%"
+            message="Identical" if match else f"Screenshots differ (byte-level): {diff_bytes} bytes different"
         )
