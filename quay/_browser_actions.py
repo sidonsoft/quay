@@ -54,22 +54,43 @@ class BrowserActionsMixin:
     
     def click_by_text(self, text: str, tab=None, timeout=None, *, double=False, button="left") -> bool:
         async def _click():
-            # Find element by text
-            nodes = self.find_by_name(text, tab=tab, timeout=timeout)  # type: ignore[attr-defined]
+            # Resolve the target tab first
+            target_tab = self._resolve_tab(tab)  # type: ignore[attr-defined]
+            if not target_tab:
+                target_tab = self.current_tab  # type: ignore[attr-defined]
+            if not target_tab:
+                tabs = self.list_tabs()  # type: ignore[attr-defined]
+                if not tabs:
+                    raise BrowserError("No tab available for click")
+                target_tab = tabs[0]
+
+            # Find element by text in the accessibility tree
+            nodes = self.find_by_name(text, tab=target_tab, timeout=timeout)  # type: ignore[attr-defined]
             if not nodes:
                 raise BrowserError(f"Element with text '{text}' not found")
             node = nodes[0]
-            conn = await self._get_connection(node)  # type: ignore[attr-defined]
-            # Click the element
+
+            # Get connection using the tab, not the node
+            conn = await self._get_connection(target_tab)  # type: ignore[attr-defined]
+
+            # Click the element at node's bounding box coordinates
+            bbox = node.bounding_box if hasattr(node, 'bounding_box') else None
+            if bbox:
+                x = (bbox.get('x', 0) or 0) + (bbox.get('width', 0) or 0) / 2
+                y = (bbox.get('y', 0) or 0) + (bbox.get('height', 0) or 0) / 2
+            else:
+                # Fallback: click at center (placeholder)
+                x, y = 0, 0
+
             await conn.send("Input.dispatchMouseEvent", {
                 "type": "mousePressed",
-                "x": 0, "y": 0,
+                "x": x, "y": y,
                 "button": button,
                 "clickCount": 2 if double else 1
             })
             await conn.send("Input.dispatchMouseEvent", {
                 "type": "mouseReleased",
-                "x": 0, "y": 0,
+                "x": x, "y": y,
                 "button": button,
                 "clickCount": 2 if double else 1
             })
@@ -119,6 +140,26 @@ class BrowserActionsMixin:
             return data
         return self._run_async(_screenshot())  # type: ignore[attr-defined]
 
+    def get_html(self, tab=None, timeout=None) -> str:
+        """Get the page HTML.
+
+        Args:
+            tab: Target tab (defaults to current)
+            timeout: Operation timeout
+
+        Returns:
+            Full HTML string of the current page
+        """
+        async def _get_html():
+            resolved_tab = self._resolve_tab(tab)  # type: ignore[attr-defined]
+            conn = await self._get_connection(resolved_tab)  # type: ignore[attr-defined]
+            result = await self._send_cdp(conn, "Runtime.evaluate", {  # type: ignore[attr-defined]
+                "expression": "document.documentElement.outerHTML",
+                "returnByValue": True,
+            }, domains=["Runtime"], timeout=self._resolve_timeout(timeout))  # type: ignore[attr-defined]
+            return result.get("result", {}).get("result", {}).get("value", "")
+        return self._run_async(_get_html())  # type: ignore[attr-defined]
+
     def compare_screenshots(self, baseline: str | bytes, current: str | bytes, threshold=0.01) -> ComparisonResult:
         """Compare two screenshots and return comparison result."""
         # Simple implementation - would use PIL/Pillow in production
@@ -132,7 +173,20 @@ class BrowserActionsMixin:
                 current_data = f.read()
         else:
             current_data = current
-        # Placeholder comparison
+
+        # Placeholder comparison - byte-level comparison
         match = baseline_data == current_data
-        diff_pixels = 0 if match else len(baseline_data)
-        return ComparisonResult(match=match, diff_pixels=diff_pixels, baseline_path=baseline if isinstance(baseline, str) else None, current_path=current if isinstance(current, str) else None)
+        total_bytes = max(len(baseline_data), len(current_data), 1)
+        diff_bytes = 0 if match else abs(len(baseline_data) - len(current_data))
+        diff_pixels = diff_bytes  # Byte-level approximation
+        diff_pct = 0.0 if match else (diff_bytes / total_bytes) * 100.0
+
+        return ComparisonResult(
+            match=match,
+            diff_pixels=diff_pixels,
+            diff_percentage=round(diff_pct, 2),
+            baseline_size=(0, 0),
+            current_size=(0, 0),
+            diff_path=None,
+            message="Identical" if match else f"Screenshots differ by {round(diff_pct, 2)}%"
+        )

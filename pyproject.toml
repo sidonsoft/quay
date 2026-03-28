@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quay"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Chrome DevTools with accessibility-tree semantics"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -31,6 +31,9 @@ quay = "quay.cli:main"
 [project.urls]
 Homepage = "https://github.com/sidonsoft/quay"
 Repository = "https://github.com/sidonsoft/quay"
+
+[tool.setuptools.dynamic]
+version = {attr = "quay._version.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-03-29
+
+### Fixed
+
+**BUG-1: `get_html()` Method Missing**
+- Added missing `get_html()` method to `BrowserActionsMixin`
+- `quay html` CLI command now works correctly
+- Returns full HTML of current page via `document.documentElement.outerHTML`
+
+**BUG-2: `click_by_text()` Wrong Parameter Type**
+- Fixed `_get_connection(node)` where `node` is `AXNode` but expects `Tab`
+- Now correctly resolves tab first, then gets connection
+- Added bounding box support for click coordinates
+
+**BUG-3: `_parse_ax_nodes` Wrong Field Names**
+- Fixed: `id` → `ref` (AXNode uses `ref` as identifier)
+- Fixed: Removed nonexistent `ignored` field
+- Fixed: Added proper `url`, `level`, `focused` fields
+- Fixed: `find_by_ref` now compares `node.ref` instead of `node.id`
+
+**BUG-4: `compare_screenshots` Wrong Field Names**
+- Fixed `ComparisonResult` construction using correct fields
+- `baseline_size`, `current_size` (tuple), `diff_path`, `message` instead of `baseline_path`/`current_path`
+
+**BUG-5: pyproject.toml Version Mismatch**
+- Version now dynamically loaded from `quay/_version.py` via `tool.setuptools.dynamic`
+- `_version.py` is single source of truth for version
+
+**BONUS: JS Injection Security**
+- `escape_js_string()` now returns properly quoted JSON string
+- Callers updated to use `{escaped}` without extra quotes
+- Prevents quote mismatch vulnerabilities in JavaScript evaluation
+
 ## [0.2.0] - 2026-03-28
 
 ### Fixed

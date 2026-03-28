@@ -36,12 +36,14 @@ class BrowserAccessibilityMixin:
     def _parse_ax_nodes(self, nodes: list[dict]) -> AXNode:
         def parse_node(node: dict) -> AXNode:
             return AXNode(
-                id=str(node.get("nodeId", "")),
+                ref=str(node.get("nodeId", "")),
                 role=node.get("role", {}).get("value", ""),
                 name=node.get("name", {}).get("value", ""),
                 value=node.get("value", {}).get("value", ""),
+                url=node.get("url"),
+                level=node.get("hierarchicalLevel"),
+                focused=node.get("focused", False),
                 description=node.get("description", {}).get("value", ""),
-                ignored=node.get("ignored", False),
                 children=[parse_node(c) for c in node.get("children", [])],
             )
         root = nodes[0] if nodes else {}
@@ -60,7 +62,7 @@ class BrowserAccessibilityMixin:
 
     def find_by_ref(self, ref: str, tab=None, timeout=None) -> AXNode | None:
         def matches(node):
-            return node.id == ref.lstrip("axnode@")
+            return node.ref == ref or node.ref == ref.lstrip("axnode@")
         results = self.accessibility_find(matches, tab=tab, timeout=timeout)
         return results[0] if results else None
 

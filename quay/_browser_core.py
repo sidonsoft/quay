@@ -28,22 +28,22 @@ def escape_js_string(text: str) -> str:
     """Safely escape string for JavaScript injection using json.dumps.
     
     This properly handles Unicode, special characters, and edge cases
-    that manual escaping misses. Returns the string without surrounding
-    quotes for inline use in JavaScript expressions.
+    that manual escaping misses. Returns the string WITH surrounding
+    double quotes for direct use in JavaScript expressions.
     
     Args:
         text: String to escape
         
     Returns:
-        Escaped string safe for JavaScript string literals
+        JSON-escaped string with surrounding double quotes
         
     Example:
         >>> escape_js_string('Hello "world"')
-        'Hello \\\\"world\\\\"'
+        '"Hello \\"world\\""'
         >>> escape_js_string("Line\\nbreak")
-        'Line\\\\nbreak'
+        '"Line\\nbreak"'
     """
-    return json.dumps(text)[1:-1]  # Remove surrounding quotes
+    return json.dumps(text)
 
 
 class BrowserCoreMixin:

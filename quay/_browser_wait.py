@@ -42,9 +42,9 @@ class BrowserWaitMixin:
         start = time.time()
         while time.time() - start <= timeout:
             try:
-                if selector and self.evaluate(f"document.querySelector('{escape_js_string(selector)}') !== null", tab=resolved_tab):  # type: ignore[attr-defined]
+                if selector and self.evaluate(f"document.querySelector({escape_js_string(selector)}) !== null", tab=resolved_tab):  # type: ignore[attr-defined]
                     return True
-                if text and self.evaluate(f"document.body.innerText.includes('{escape_js_string(text)}')", tab=resolved_tab):  # type: ignore[attr-defined]
+                if text and self.evaluate(f"document.body.innerText.includes({escape_js_string(text)})", tab=resolved_tab):  # type: ignore[attr-defined]
                     return True
             except (ConnectionError, TimeoutError, BrowserError):
                 pass
@@ -76,7 +76,7 @@ class BrowserWaitMixin:
         escaped = escape_js_string(selector)
         while time.time() - start <= timeout:
             try:
-                if self.evaluate(f"(function() {{ const el = document.querySelector('{escaped}'); if (!el) return false; const style = window.getComputedStyle(el); return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null; }})()"):  # type: ignore[attr-defined]
+                if self.evaluate(f"(function() {{ const el = document.querySelector({escaped}); if (!el) return false; const style = window.getComputedStyle(el); return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null; }})()"):  # type: ignore[attr-defined]
                     return True
             except (ConnectionError, TimeoutError, BrowserError):
                 pass
@@ -88,7 +88,7 @@ class BrowserWaitMixin:
         escaped = escape_js_string(selector)
         while time.time() - start <= timeout:
             try:
-                if self.evaluate(f"(function() {{ const el = document.querySelector('{escaped}'); if (!el) return true; const style = window.getComputedStyle(el); return style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null; }})()"):  # type: ignore[attr-defined]
+                if self.evaluate(f"(function() {{ const el = document.querySelector({escaped}); if (!el) return true; const style = window.getComputedStyle(el); return style.display === 'none' || style.visibility === 'hidden' || el.offsetParent === null; }})()"):  # type: ignore[attr-defined]
                     return True
             except (ConnectionError, TimeoutError, BrowserError):
                 pass
