@@ -21,6 +21,7 @@ import argparse
 import os
 import sys
 import tempfile
+from contextlib import contextmanager
 
 from .browser import Browser
 
@@ -36,13 +37,27 @@ def print_error(message: str) -> None:
     print(f"Error: {message}", file=sys.stderr)
 
 
+@contextmanager
+def browser_context(host: str = "localhost", port: int = 9222):
+    """Context manager for Browser instance with proper cleanup.
+    
+    Creates a single Browser instance for CLI commands and ensures
+    proper cleanup on exit.
+    """
+    browser = Browser(host=host, port=port)
+    try:
+        yield browser
+    finally:
+        browser.close()
+
+
 def cmd_list(args: argparse.Namespace) -> int:
     """List all tabs."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        tabs = browser.list_tabs()
-        for t in tabs:
-            print(f"  {t.id[:12]}  {t.title[:30]:30}  {t.url[:60]}")
+        with browser_context(args.host, args.port) as browser:
+            tabs = browser.list_tabs()
+            for t in tabs:
+                print(f"  {t.id[:12]}  {t.title[:30]:30}  {t.url[:60]}")
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -52,10 +67,10 @@ def cmd_list(args: argparse.Namespace) -> int:
 def cmd_new(args: argparse.Namespace) -> int:
     """Open new tab."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        url = args.url
-        tab = browser.new_tab(url)
-        print(f"✓ Opened: {tab.url}")
+        with browser_context(args.host, args.port) as browser:
+            url = args.url
+            tab = browser.new_tab(url)
+            print(f"✓ Opened: {tab.url}")
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -65,9 +80,9 @@ def cmd_new(args: argparse.Namespace) -> int:
 def cmd_snapshot(args: argparse.Namespace) -> int:
     """Get accessibility tree snapshot."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        tree = browser.accessibility_tree()
-        print(tree.to_tree_str())
+        with browser_context(args.host, args.port) as browser:
+            tree = browser.accessibility_tree()
+            print(tree.to_tree_str())
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -78,9 +93,9 @@ def cmd_screenshot(args: argparse.Namespace) -> int:
     """Take screenshot."""
     path = args.path
     try:
-        browser = Browser(host=args.host, port=args.port)
-        browser.screenshot(path)
-        print(f"✓ Saved: {path}")
+        with browser_context(args.host, args.port) as browser:
+            browser.screenshot(path)
+            print(f"✓ Saved: {path}")
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -90,9 +105,9 @@ def cmd_screenshot(args: argparse.Namespace) -> int:
 def cmd_html(args: argparse.Namespace) -> int:
     """Get page HTML."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        html = browser.get_html()
-        print(html)
+        with browser_context(args.host, args.port) as browser:
+            html = browser.get_html()
+            print(html)
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -102,9 +117,9 @@ def cmd_html(args: argparse.Namespace) -> int:
 def cmd_eval(args: argparse.Namespace) -> int:
     """Execute JavaScript."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        result = browser.evaluate(" ".join(args.script))
-        print(result)
+        with browser_context(args.host, args.port) as browser:
+            result = browser.evaluate(" ".join(args.script))
+            print(result)
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -114,10 +129,10 @@ def cmd_eval(args: argparse.Namespace) -> int:
 def cmd_click(args: argparse.Namespace) -> int:
     """Click element by text."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        text = " ".join(args.text)
-        result = browser.click_by_text(text)
-        print(f"✓ Clicked: {result}")
+        with browser_context(args.host, args.port) as browser:
+            text = " ".join(args.text)
+            result = browser.click_by_text(text)
+            print(f"✓ Clicked: {result}")
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -127,14 +142,14 @@ def cmd_click(args: argparse.Namespace) -> int:
 def cmd_navigate(args: argparse.Namespace) -> int:
     """Navigate current tab."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        url = args.url
-        if not browser.current_tab:
-            tabs = browser.list_tabs()
-            if tabs:
-                browser.current_tab = tabs[0]
-        browser.navigate(url)
-        print(f"✓ Navigated to: {url}")
+        with browser_context(args.host, args.port) as browser:
+            url = args.url
+            if not browser.current_tab:
+                tabs = browser.list_tabs()
+                if tabs:
+                    browser.current_tab = tabs[0]
+            browser.navigate(url)
+            print(f"✓ Navigated to: {url}")
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -144,17 +159,17 @@ def cmd_navigate(args: argparse.Namespace) -> int:
 def cmd_close(args: argparse.Namespace) -> int:
     """Close tabs."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        if args.ids:
-            for tab_id in args.ids:
-                browser.close_tab(tab_id)
-                print(f"✓ Closed: {tab_id}")
-        else:
-            # Close all non-chrome tabs
-            for t in browser.list_tabs():
-                if not t.url.startswith("chrome://"):
-                    browser.close_tab(t.id)
-                    print(f"✓ Closed: {t.url[:40]}")
+        with browser_context(args.host, args.port) as browser:
+            if args.ids:
+                for tab_id in args.ids:
+                    browser.close_tab(tab_id)
+                    print(f"✓ Closed: {tab_id}")
+            else:
+                # Close all non-chrome tabs
+                for t in browser.list_tabs():
+                    if not t.url.startswith("chrome://"):
+                        browser.close_tab(t.id)
+                        print(f"✓ Closed: {t.url[:40]}")
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -164,11 +179,11 @@ def cmd_close(args: argparse.Namespace) -> int:
 def cmd_version(args: argparse.Namespace) -> int:
     """Show Chrome version."""
     try:
-        browser = Browser(host=args.host, port=args.port)
-        info = browser.get_version()
-        print(f"Browser: {info.browser}")
-        print(f"Protocol: {info.protocol_version}")
-        print(f"User-Agent: {info.user_agent[:60]}...")
+        with browser_context(args.host, args.port) as browser:
+            info = browser.get_version()
+            print(f"Browser: {info.browser}")
+            print(f"Protocol: {info.protocol_version}")
+            print(f"User-Agent: {info.user_agent[:60]}...")
         return EXIT_SUCCESS
     except Exception as e:
         print_error(str(e))
@@ -180,17 +195,17 @@ def cmd_run_evals(args: argparse.Namespace) -> int:
     from .evals import run_evals
 
     try:
-        browser = Browser(host=args.host, port=args.port)
-        # Verify connection
-        browser.get_version()
+        with browser_context(args.host, args.port) as browser:
+            # Verify connection
+            browser.get_version()
 
-        report = run_evals(
-            suites=args.suite or None, verbose=not args.quiet, report_path=args.report
-        )
+            report = run_evals(
+                suites=args.suite or None, verbose=not args.quiet, report_path=args.report
+            )
 
-        if not args.quiet:
-            print()
-            print(report.summary())
+            if not args.quiet:
+                print()
+                print(report.summary())
 
         # Exit code based on pass rate
         return EXIT_SUCCESS if report.pass_rate == 1.0 else EXIT_ERROR
