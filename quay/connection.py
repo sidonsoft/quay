@@ -592,7 +592,7 @@ class ConnectionPool:
 
             # Check if we need to evict oldest (LRU)
             if len(self._connections) >= self._max_connections:
-                self._evict_oldest()
+                await self._evict_oldest()
 
             conn = Connection(
                 ws_url, tab_id=tab_id, timeout=self.timeout, rate_limit=self._rate_limit
@@ -601,12 +601,11 @@ class ConnectionPool:
             self._connections[tab_id] = conn
             return conn
 
-    def _evict_oldest(self) -> None:
-        """Remove oldest connection to make room (LRU).
-        
-        Synchronously marks connection for cleanup. The actual WebSocket
-        close happens when the connection is garbage collected or explicitly
-        closed via close_all().
+    async def _evict_oldest(self) -> None:
+        """Remove and close oldest connection to make room (LRU).
+
+        Properly closes the WebSocket to avoid file descriptor leaks.
+        This must be called from async context.
         """
         if not self._connections:
             return
@@ -615,11 +614,12 @@ class ConnectionPool:
         oldest_id = min(self._connections.keys(), key=lambda k: self._connections[k].last_used)
         conn = self._connections.pop(oldest_id)
 
-        # Mark as disconnected - the connection will be cleaned up when
-        # the event loop gets a chance or when close_all() is called.
-        # This avoids fire-and-forget asyncio.create_task which can leak sockets.
-        conn._state = ConnectionState.DISCONNECTED
-        conn._connected = False
+        # Properly close the WebSocket connection
+        try:
+            await conn.disconnect()
+            logger.debug("Evicted connection for tab %s", oldest_id)
+        except Exception as e:
+            logger.debug("Error closing evicted connection for tab %s: %s", oldest_id, e)
 
     async def get_existing(self, tab_id: str) -> Connection | None:
         """

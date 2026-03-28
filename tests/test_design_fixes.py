@@ -51,35 +51,50 @@ class TestDES1AsyncPolling:
 
 
 class TestDES2EvictionNoFireAndForgetC:
-    """Test that _evict_oldest doesn't use fire-and-forget asyncio.create_task."""
+    """Test that _evict_oldest properly closes WebSocket connections."""
 
-    def test_evict_marks_disconnected_not_async(self):
-        """_evict_oldest should synchronously mark connection as disconnected."""
+    @pytest.mark.asyncio
+    async def test_evict_calls_disconnect_async(self):
+        """_evict_oldest should await conn.disconnect() to properly close WebSocket."""
         pool = ConnectionPool(max_connections=2)
 
         # Create mock connections
-        conn1 = MagicMock(spec=Connection)
+        conn1 = AsyncMock(spec=Connection)
         conn1.last_used = 100.0
         conn1._state = ConnectionState.CONNECTED
         conn1._connected = True
 
-        conn2 = MagicMock(spec=Connection)
+        conn2 = AsyncMock(spec=Connection)
         conn2.last_used = 200.0
         conn2._state = ConnectionState.CONNECTED
         conn2._connected = True
 
         pool._connections = {"tab1": conn1, "tab2": conn2}
 
-        # Evict should not call asyncio.create_task
-        with patch("asyncio.create_task") as mock_create_task:
-            pool._evict_oldest()
-            # Should NOT create an async task
-            mock_create_task.assert_not_called()
+        # Evict should call disconnect() and await it
+        await pool._evict_oldest()
 
-        # Oldest (tab1) should be removed and marked disconnected
+        # Oldest (tab1) should be removed
         assert "tab1" not in pool._connections
-        assert conn1._state == ConnectionState.DISCONNECTED
-        assert conn1._connected is False
+        # disconnect() should have been called
+        conn1.disconnect.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_evict_handles_disconnect_errors(self):
+        """_evict_oldest should handle disconnect errors gracefully."""
+        pool = ConnectionPool(max_connections=2)
+
+        conn1 = AsyncMock(spec=Connection)
+        conn1.last_used = 100.0
+        conn1.disconnect.side_effect = Exception("WebSocket error")
+
+        pool._connections = {"tab1": conn1}
+
+        # Should not raise
+        await pool._evict_oldest()
+
+        # Connection should still be removed
+        assert "tab1" not in pool._connections
 
 
 class TestDES3AgeBasedCleanup:
