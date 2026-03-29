@@ -5,7 +5,8 @@ Data models for browser-hybrid.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Any
 
 
@@ -192,7 +193,9 @@ class AXNode:
         # Add value for inputs
         if self.value:
             value_preview = (
-                self.value[:50] + "..." if len(str(self.value)) > 50 else str(self.value)
+                self.value[:50] + "..."
+                if len(str(self.value)) > 50
+                else str(self.value)
             )
             attrs.append(f"/value: {value_preview}")
 

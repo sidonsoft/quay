@@ -16,13 +16,17 @@ import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import Enum
+from enum import auto
 from typing import Any
 
 # websockets is a required dependency
-from websockets.asyncio.client import ClientConnection, connect
+from websockets.asyncio.client import ClientConnection
+from websockets.asyncio.client import connect
 
-from .errors import ConnectionError, TimeoutError, parse_cdp_error
+from .errors import ConnectionError
+from .errors import TimeoutError
+from .errors import parse_cdp_error
 
 logger = logging.getLogger(__name__)
 
@@ -444,7 +448,9 @@ class Connection:
             self._event_listeners[method] = []
         self._event_listeners[method].append(callback)
 
-    def off_event(self, method: str, callback: Callable[[dict], None] | None = None) -> None:
+    def off_event(
+        self, method: str, callback: Callable[[dict], None] | None = None
+    ) -> None:
         """
         Unregister callback(s) for a CDP event.
 
@@ -611,7 +617,9 @@ class ConnectionPool:
             return
 
         # Find connection with oldest last_used timestamp
-        oldest_id = min(self._connections.keys(), key=lambda k: self._connections[k].last_used)
+        oldest_id = min(
+            self._connections.keys(), key=lambda k: self._connections[k].last_used
+        )
         conn = self._connections.pop(oldest_id)
 
         # Properly close the WebSocket connection

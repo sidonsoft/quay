@@ -1,0 +1,148 @@
+Metadata-Version: 2.4
+Name: quay
+Version: 0.1.0
+Summary: Chrome DevTools with accessibility-tree semantics
+Author-email: Russell Stephens <russell@sidonsoft.com>
+License: Apache-2.0
+Project-URL: Homepage, https://github.com/sidonsoft/quay
+Project-URL: Repository, https://github.com/sidonsoft/quay
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: websockets>=12.0
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: pytest-cov>=6.0; extra == "dev"
+Requires-Dist: ruff>=0.9.0; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+Dynamic: license-file
+
+# Quay — Chrome DevTools with Accessibility Semantics
+
+[![PyPI version](https://badge.fury.io/py/quay.svg)](https://badge.fury.io/py/quay)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE)
+
+**Quay** combines Chrome DevTools Protocol with accessibility-tree semantics for browser automation using your authenticated Chrome sessions.
+
+## Why Quay?
+
+| Feature | Quay | Playwright | agent-browser | Raw CDP |
+|---------|------|------------|---------------|---------|
+| Accessibility tree | ✅ | ❌ | ✅ | ❌ |
+| Uses your logged-in Chrome | ✅ | ❌ | ❌ | ❌ |
+| Connection pooling | ✅ | ❌ | ❌ | ❌ |
+| Auto-reconnect | ✅ | ❌ | ❌ | ❌ |
+| Python-native | ✅ | ✅ | ❌ | ❌ |
+| Session recording | ✅ | ❌ | ❌ | ❌ |
+| Weight | ~20KB | ~MB | ~MB | ~5MB |
+
+## Installation
+
+```bash
+pip install quay
+```
+
+Or from source:
+
+```bash
+git clone https://github.com/sidonsoft/quay
+cd quay
+pip install -e .
+```
+
+## Prerequisites
+
+Chrome must be running with remote debugging enabled:
+
+```bash
+# macOS
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+
+# Linux
+google-chrome --remote-debugging-port=9222
+
+# Windows
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+```
+
+Or use the included launcher:
+
+```bash
+./scripts/chrome-debug.sh
+```
+
+## Quick Start
+
+### Python API
+
+```python
+from quay import Browser
+
+browser = Browser()
+browser.goto("https://gmail.com")  # Uses your logged-in session
+
+tree = browser.accessibility_tree()
+print(tree.to_tree_str())
+
+browser.click_by_text("Sign in")
+browser.fill_form({"Email": "user@example.com"})
+```
+
+### CLI
+
+```bash
+# List tabs
+quay list
+
+# Open new tab
+quay new https://example.com
+
+# Get accessibility tree
+quay snapshot
+
+# Take screenshot
+quay screenshot
+
+# Click by text
+quay click "Submit"
+```
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Accessibility Tree** | Navigate pages using AX nodes like agent-browser |
+| **Session Reuse** | Uses your existing Chrome session (no separate browser) |
+| **Connection Pooling** | WebSocket reuse across operations for speed |
+| **Auto-Reconnect** | Automatically reconnects on connection drop |
+| **Session Recording** | Record and replay browser actions |
+| **Form Filling** | Fill forms by label text |
+| **Click by Text** | Click elements matching visible text |
+| **JavaScript Eval** | Run arbitrary JavaScript |
+
+## Automatic Reconnection
+
+Quay automatically detects dropped connections and reconnects:
+
+```python
+browser = Browser(reconnect=True, reconnect_max_retries=3)
+
+# If connection drops during operation,
+# Quay will attempt to reconnect automatically
+tree = browser.accessibility_tree()  # May auto-reconnect if needed
+```
+
+Monitor reconnection with a callback:
+
+```python
+def on_reconnect(msg):
+    print(f"Reconnecting: {msg}")
+
+browser = Browser(reconnect_callback=on_reconnect)
+```
+
+## License
+
+Apache-2.0 - See [LICENSE](LICENSE) for details.

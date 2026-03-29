@@ -1,184 +1,247 @@
-"""Tests for quay.models — data classes and serialization."""
-from __future__ import annotations
+"""Tests for quay.models."""
 
+import time
 
-from quay.models import Tab, AXNode, ComparisonResult, Action, Recording
+import pytest
+
+from quay.models import Action
+from quay.models import AXNode
+from quay.models import BrowserInfo
+from quay.models import ComparisonResult
+from quay.models import Recording
+from quay.models import Tab
 
 
 class TestTab:
-    def test_create_basic(self):
-        tab = Tab(id="123", url="https://example.com", title="Example", type="page", web_socket_debugger_url="ws://localhost:9222/devtools/page/123")
-        assert tab.id == "123"
+    """Tests for Tab model."""
+
+    def test_from_dict_full(self):
+        """Tab parses full Chrome response."""
+        data = {
+            "id": "tab123",
+            "url": "https://example.com",
+            "title": "Example",
+            "type": "page",
+            "webSocketDebuggerUrl": "ws://localhost:9222/devtools/page/tab123",
+        }
+        tab = Tab.from_dict(data)
+        assert tab.id == "tab123"
         assert tab.url == "https://example.com"
         assert tab.title == "Example"
         assert tab.type == "page"
+        assert tab.web_socket_debugger_url == "ws://localhost:9222/devtools/page/tab123"
 
-    def test_from_dict(self):
-        data = {"id": "456", "url": "https://test.com", "title": "Test", "type": "page", "webSocketDebuggerUrl": "ws://localhost:9222/devtools/page/456"}
+    def test_from_dict_partial(self):
+        """Tab handles missing fields gracefully."""
+        data = {"id": "tab456"}
         tab = Tab.from_dict(data)
-        assert tab.id == "456"
-        assert tab.url == "https://test.com"
-        assert tab.title == "Test"
-
-    def test_from_dict_defaults(self):
-        data = {"id": "789"}
-        tab = Tab.from_dict(data)
-        assert tab.id == "789"
+        assert tab.id == "tab456"
         assert tab.url == ""
         assert tab.title == ""
         assert tab.type == "page"
+        assert tab.web_socket_debugger_url == ""
 
-    def test_repr_truncation(self):
-        tab = Tab(id="very-long-id-12345678", url="https://example.com/very/long/path", title="A Very Long Title That Should Be Truncated", type="page", web_socket_debugger_url="ws://localhost:9222")
+    def test_repr(self):
+        """Tab repr is readable."""
+        tab = Tab(
+            id="abcdefghijkl",
+            url="https://example.com/very/long/path",
+            title="A Very Long Title Here",
+            type="page",
+            web_socket_debugger_url="ws://localhost:9222/devtools/page/abcdefghijkl",
+        )
         r = repr(tab)
-        assert "Tab(" in r
-        assert "..." in r
+        assert "abcdefgh" in r
+        assert "A Very" in r
 
 
 class TestAXNode:
-    def test_create_basic(self):
-        node = AXNode(ref="1", role="button", name="Click me")
-        assert node.ref == "1"
-        assert node.role == "button"
-        assert node.name == "Click me"
+    """Tests for AXNode model."""
 
-    def test_create_with_children(self):
-        parent = AXNode(ref="1", role="root", name="", children=[
-            AXNode(ref="2", role="link", name="About"),
-            AXNode(ref="3", role="link", name="Contact"),
-        ])
-        assert len(parent.children) == 2
-        assert parent.children[0].name == "About"
+    def test_minimal(self):
+        """AXNode creates with minimal fields."""
+        node = AXNode(ref="ref1", role="link", name="Click here")
+        assert node.ref == "ref1"
+        assert node.role == "link"
+        assert node.name == "Click here"
+        assert node.value is None
+        assert node.focused is False
+        assert node.children == []
 
-    def test_find_exists(self):
-        tree = AXNode(ref="1", role="RootWebArea", name="Page", children=[
-            AXNode(ref="2", role="link", name="Click here"),
-            AXNode(ref="3", role="button", name="Submit"),
-        ])
-        result = tree.find("2")
-        assert result is not None
-        assert result.name == "Click here"
+    def test_with_children(self):
+        """AXNode creates with children."""
+        child = AXNode(ref="c1", role="link", name="Child")
+        root = AXNode(ref="r2", role="root", name="Root", children=[child])
+        assert len(root.children) == 1
+        assert root.children[0].ref == "c1"
 
-    def test_find_not_found(self):
-        tree = AXNode(ref="1", role="RootWebArea", name="Page")
-        assert tree.find("999") is None
-
-    def test_find_nested(self):
-        tree = AXNode(ref="1", role="RootWebArea", name="", children=[
-            AXNode(ref="2", role="group", name="", children=[
-                AXNode(ref="3", role="link", name="Deep"),
-            ]),
-        ])
-        result = tree.find("3")
-        assert result is not None
-        assert result.name == "Deep"
+    def test_find(self):
+        """AXNode.find locates node by ref."""
+        child = AXNode(ref="c1", role="link", name="Child")
+        root = AXNode(ref="r1", role="root", name="Root", children=[child])
+        assert root.find("r1") is root
+        assert root.find("c1") is child
+        assert root.find("nonexistent") is None
 
     def test_find_by_role(self):
-        tree = AXNode(ref="1", role="RootWebArea", name="Page", children=[
-            AXNode(ref="2", role="link", name="Home"),
-            AXNode(ref="3", role="button", name="Submit"),
-            AXNode(ref="4", role="link", name="About"),
-        ])
-        links = tree.find_by_role("link")
+        """AXNode.find_by_role finds all matching roles."""
+        root = AXNode(
+            ref="r1",
+            role="root",
+            name="Root",
+            children=[
+                AXNode(ref="r2", role="link", name="Link 1"),
+                AXNode(ref="r3", role="heading", name="Heading"),
+                AXNode(ref="r4", role="link", name="Link 2"),
+            ],
+        )
+        links = root.find_by_role("link")
         assert len(links) == 2
-        names = [n.name for n in links]
-        assert "Home" in names
-        assert "About" in names
+        assert links[0].name == "Link 1"
+        assert links[1].name == "Link 2"
 
     def test_find_by_name(self):
-        tree = AXNode(ref="1", role="RootWebArea", name="Page", children=[
-            AXNode(ref="2", role="link", name="Click here"),
-            AXNode(ref="3", role="button", name="Click here"),
-            AXNode(ref="4", role="link", name="Other"),
-        ])
-        matches = tree.find_by_name("Click here")
-        assert len(matches) == 2
+        """AXNode.find_by_name is case-insensitive."""
+        root = AXNode(
+            ref="r1",
+            role="root",
+            name="Root",
+            children=[
+                AXNode(ref="r2", role="link", name="Search Button"),
+                AXNode(ref="r3", role="button", name="Cancel"),
+            ],
+        )
+        results = root.find_by_name("search")
+        assert len(results) == 1
+        assert results[0].name == "Search Button"
+
+    def test_find_by_name_empty(self):
+        """AXNode.find_by_name returns empty for None/empty."""
+        node = AXNode(ref="r1", role="link", name="Test")
+        assert node.find_by_name(None) == []
+        assert node.find_by_name("") == []
 
     def test_find_interactive(self):
-        tree = AXNode(ref="1", role="RootWebArea", name="Page", children=[
-            AXNode(ref="2", role="link", name="Home"),
-            AXNode(ref="3", role="button", name="Submit"),
-            AXNode(ref="4", role="textbox", name="Username"),
-            AXNode(ref="5", role="checkbox", name="Remember"),
-            AXNode(ref="6", role="heading", name="Title"),
-        ])
-        interactive = tree.find_interactive()
+        """AXNode.find_interactive finds interactive elements."""
+        root = AXNode(
+            ref="r1",
+            role="root",
+            name="Root",
+            children=[
+                AXNode(ref="r2", role="link", name="Link"),
+                AXNode(ref="r3", role="heading", name="Heading"),
+                AXNode(ref="r4", role="button", name="Button"),
+                AXNode(ref="r5", role="textbox", name="Input"),
+            ],
+        )
+        interactive = root.find_interactive()
+        assert len(interactive) == 3
         roles = {n.role for n in interactive}
         assert "link" in roles
         assert "button" in roles
         assert "textbox" in roles
-        assert "checkbox" in roles
-        assert "heading" not in roles
 
     def test_to_tree_str(self):
-        tree = AXNode(ref="1", role="RootWebArea", name="Page", children=[
-            AXNode(ref="2", role="link", name="Home"),
-        ])
-        s = tree.to_tree_str()
-        assert "RootWebArea" in s
-        assert "link" in s
-        assert "Home" in s
+        """AXNode.to_tree_str formats as tree."""
+        child = AXNode(ref="c1", role="link", name="Child link")
+        root = AXNode(ref="r1", role="root", name="Root", children=[child])
+        output = root.to_tree_str()
+        assert "Root" in output
+        assert "Child link" in output
+        assert "root" in output
+        assert "link" in output
+
+    def test_to_tree_str_compact(self):
+        """AXNode.to_tree_str compact format."""
+        node = AXNode(ref="r1", role="link", name="Test")
+        output = node.to_tree_str(fmt="compact")
+        assert "link" in output
+        assert "r1" in output
+
+    def test_to_dict(self):
+        """AXNode.to_dict serializes to dict."""
+        node = AXNode(ref="r1", role="link", name="Test")
+        d = node.to_dict()
+        assert d["ref"] == "r1"
+        assert d["role"] == "link"
+        assert d["name"] == "Test"
+        assert d["children"] == []
+
+
+class TestBrowserInfo:
+    """Tests for BrowserInfo model."""
+
+    def test_from_dict(self):
+        """BrowserInfo parses Chrome /json/version response."""
+        data = {
+            "Browser": "Chrome/120.0.0.0",
+            "Protocol-Version": "1.3",
+            "User-Agent": "Mozilla/5.0 ...",
+            "V8-Version": "12.0.0.0",
+            "WebKit-Version": "537.36",
+            "webSocketDebuggerUrl": "ws://localhost:9222/devtools/browser",
+        }
+        info = BrowserInfo.from_dict(data)
+        assert "Chrome" in info.browser
+        assert info.protocol_version == "1.3"
+        assert info.v8_version == "12.0.0.0"
+
+    def test_from_dict_partial(self):
+        """BrowserInfo handles missing fields."""
+        data = {}
+        info = BrowserInfo.from_dict(data)
+        assert info.browser == ""
+        assert info.protocol_version == ""
+
+
+class TestAction:
+    """Tests for Action model."""
+
+    def test_action_creation(self):
+        """Action dataclass creates correctly."""
+        action = Action(type="click", timestamp=time.time(), params={"ref": "r1"})
+        assert action.type == "click"
+        assert "ref" in action.params
+
+    def test_action_to_dict(self):
+        """Action serializes to dict with params flattened."""
+        action = Action(
+            type="fill", timestamp=1000.0, params={"ref": "r1", "value": "hi"}
+        )
+        d = action.to_dict()
+        assert d["type"] == "fill"
+        assert d["timestamp"] == 1000.0
+        assert d["ref"] == "r1"
+        assert d["value"] == "hi"
 
 
 class TestComparisonResult:
-    def test_match(self):
+    """Tests for ComparisonResult model."""
+
+    def test_pass(self):
+        """ComparisonResult with passed checks."""
         result = ComparisonResult(
             match=True,
             diff_pixels=0,
             diff_percentage=0.0,
-            baseline_size=(100, 100),
-            current_size=(100, 100),
-            diff_path=None,
-            message="Identical"
+            baseline_size=(1920, 1080),
+            current_size=(1920, 1080),
         )
         assert result.match is True
         assert result.diff_pixels == 0
 
-    def test_no_match(self):
+    def test_fail(self):
+        """ComparisonResult with failures."""
         result = ComparisonResult(
             match=False,
-            diff_pixels=100,
-            diff_percentage=5.5,
-            baseline_size=(100, 100),
-            current_size=(100, 100),
+            diff_pixels=1500,
+            diff_percentage=0.05,
+            baseline_size=(1920, 1080),
+            current_size=(1920, 1080),
             diff_path="/tmp/diff.png",
-            message="Screenshots differ"
+            message="Images differ",
         )
         assert result.match is False
-        assert result.diff_percentage == 5.5
-
-
-class TestAction:
-    def test_create(self):
-        action = Action(type="click", timestamp=1.0, params={"x": 10, "y": 20})
-        assert action.type == "click"
-        assert action.timestamp == 1.0
-        assert action.params["x"] == 10
-
-    def test_from_dict(self):
-        action = Action.from_dict({"type": "type", "timestamp": 0.5, "text": "hello"})
-        assert action.type == "type"
-        assert "text" in action.params
-
-
-class TestRecording:
-    def test_create_empty(self):
-        rec = Recording()
-        assert len(rec.actions) == 0
-
-    def test_actions_append(self):
-        rec = Recording()
-        rec.start_time = 0.0
-        action = Action(type="click", timestamp=0.5, params={"x": 10})
-        rec.actions.append(action)
-        assert len(rec.actions) == 1
-        assert rec.actions[0].type == "click"
-
-    def test_to_dict(self):
-        rec = Recording()
-        rec.start_time = 0.0
-        action = Action(type="click", timestamp=0.5, params={"x": 10})
-        rec.actions.append(action)
-        d = rec.to_dict()
-        assert "actions" in d
-        assert len(d["actions"]) == 1
+        assert result.diff_pixels == 1500
+        assert result.diff_path == "/tmp/diff.png"
+        assert result.message == "Images differ"

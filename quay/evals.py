@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from dataclasses import field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -16,11 +17,9 @@ from typing import Any
 import yaml
 
 from quay import Browser
-from quay.errors import (
-    BrowserError,
-    ConnectionError,
-    TimeoutError,
-)
+from quay.errors import BrowserError
+from quay.errors import ConnectionError
+from quay.errors import TimeoutError
 
 
 @dataclass
@@ -92,7 +91,9 @@ class EvalReport:
             lines.append(f"{suite}: {status}")
 
         lines.append("")
-        lines.append(f"Total: {self.passed_count}/{self.total} PASSED ({self.pass_rate:.1%})")
+        lines.append(
+            f"Total: {self.passed_count}/{self.total} PASSED ({self.pass_rate:.1%})"
+        )
 
         # Add failures if any
         if self.failed_count > 0:
@@ -403,7 +404,9 @@ class EvalRunner:
         # For now, just return the inputs for validation
         return {"inputs": inputs}
 
-    def _validate(self, actual: Any, expected: dict[str, Any]) -> tuple[bool, str | None]:
+    def _validate(
+        self, actual: Any, expected: dict[str, Any]
+    ) -> tuple[bool, str | None]:
         """
         Validate actual against expected.
 
@@ -455,7 +458,9 @@ class EvalRunner:
 
         # Validate found
         if "found" in expected:
-            actual_found = actual.get("found", False) if isinstance(actual, dict) else False
+            actual_found = (
+                actual.get("found", False) if isinstance(actual, dict) else False
+            )
             if actual_found == expected["found"]:
                 return True, None
             return False, f"Expected found={expected['found']}, got {actual_found}"
@@ -465,29 +470,47 @@ class EvalRunner:
             actual_count = actual.get("count", 0) if isinstance(actual, dict) else 0
             if actual_count >= expected["min_count"]:
                 return True, None
-            return False, f"Expected count >= {expected['min_count']}, got {actual_count}"
+            return (
+                False,
+                f"Expected count >= {expected['min_count']}, got {actual_count}",
+            )
 
         # Validate element_role
         if "element_role" in expected:
-            actual_role = actual.get("element_role", "") if isinstance(actual, dict) else ""
+            actual_role = (
+                actual.get("element_role", "") if isinstance(actual, dict) else ""
+            )
             if actual_role == expected["element_role"]:
                 return True, None
-            return False, f"Expected role '{expected['element_role']}', got '{actual_role}'"
+            return (
+                False,
+                f"Expected role '{expected['element_role']}', got '{actual_role}'",
+            )
 
         # Validate root_role
         if "root_role" in expected:
-            actual_role = actual.get("root_role", "") if isinstance(actual, dict) else ""
+            actual_role = (
+                actual.get("root_role", "") if isinstance(actual, dict) else ""
+            )
             if actual_role == expected["root_role"]:
                 return True, None
-            return False, f"Expected root role '{expected['root_role']}', got '{actual_role}'"
+            return (
+                False,
+                f"Expected root role '{expected['root_role']}', got '{actual_role}'",
+            )
 
         # Validate root_role_pattern (substring match)
         if "root_role_pattern" in expected:
-            actual_role = actual.get("root_role", "") if isinstance(actual, dict) else ""
+            actual_role = (
+                actual.get("root_role", "") if isinstance(actual, dict) else ""
+            )
             pattern = expected["root_role_pattern"]
             if pattern.lower() in actual_role.lower():
                 return True, None
-            return False, f"Expected root role containing '{pattern}', got '{actual_role}'"
+            return (
+                False,
+                f"Expected root role containing '{pattern}', got '{actual_role}'",
+            )
 
         # No specific validation rules matched
         return True, None

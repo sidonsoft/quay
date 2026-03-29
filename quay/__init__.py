@@ -22,15 +22,16 @@ from __future__ import annotations
 import logging
 
 from ._version import __version__
-from .browser import (
-    Browser,
-    BrowserError,
-    CDPError,
-    ConnectionError,
-    TabError,
-    TimeoutError,
-)
-from .models import AXNode, BrowserInfo, ComparisonResult, Tab
+from .browser import Browser
+from .browser import BrowserError
+from .browser import CDPError
+from .browser import ConnectionError
+from .browser import TabError
+from .browser import TimeoutError
+from .models import AXNode
+from .models import BrowserInfo
+from .models import ComparisonResult
+from .models import Tab
 
 # Configure default logging for the package
 logging.basicConfig(level=logging.WARNING)
