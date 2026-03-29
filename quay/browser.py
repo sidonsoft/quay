@@ -725,6 +725,11 @@ class Browser:
 
         This is more reliable than /json/new?url= which may not
         properly wait for navigation in some environments.
+
+        Note:
+            If a URL is provided, navigation starts but does NOT wait for it to complete.
+            The tab object is returned immediately. Use `goto()` if you need to wait
+            for the page to fully load.
         """
         # Create empty tab
         data = self._http_put("/json/new")
@@ -1060,6 +1065,10 @@ class Browser:
 
         Returns:
             Frame ID
+
+        Note:
+            This method fires the navigation and returns immediately.
+            Use `goto()` if you need to wait for the page to fully load.
         """
         self._record_action("navigate", url=url)
         token = self._record_depth.set(self._record_depth.get() + 1)
@@ -1114,19 +1123,24 @@ class Browser:
         page_load_timeout: float | None = None,
     ) -> Tab:
         """
-        Convenience: create tab, navigate, wait for load.
+        Create a new tab, navigate to URL, and wait for load.
+
+        This is a convenience method that combines:
+        1. `new_tab(url)` - create tab and start navigation
+        2. `wait_for_load_state()` - wait for page to reach 'load' state
 
         Args:
             url: URL to navigate to
-            timeout: CDP operation timeout (default 10s)
+            timeout: CDP operation timeout (default 30s)
             page_load_timeout: Max time for page to reach 'load'
                              (default: uses timeout parameter)
 
         Returns:
-            Tab object
+            Tab object (the newly created tab)
 
-        Note: The 'timeout' parameter is for individual CDP calls.
-        Use 'page_load_timeout' to control total navigation time.
+        Note:
+            Unlike `navigate()`, this method creates a new tab and waits for the page to load.
+            Use this when you want to ensure the page is fully loaded before proceeding.
         """
         self._record_action(
             "goto", url=url, timeout=timeout, page_load_timeout=page_load_timeout
