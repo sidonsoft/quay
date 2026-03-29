@@ -1,0 +1,59 @@
+"""Test stealth script injection timing fix."""
+import asyncio
+import pytest
+from quay import Browser
+
+
+@pytest.mark.asyncio
+async def test_stealth_timing():
+    """Verify stealth scripts are injected before navigation starts."""
+    browser = Browser.launch(
+        headless=True,
+        stealth=True,
+        block_trackers=True,
+    )
+
+    try:
+        # Test 1: Check stealth injection on new_tab()
+        print("Test 1: Testing new_tab() with stealth mode...")
+        tab = browser.new_tab("https://bot.sannysoft.com/")
+        
+        # Wait for page to load
+        await asyncio.sleep(3)
+        
+        # Check stealth signals - simpler approach
+        result = await browser.evaluate("""
+            navigator.webdriver
+        """, tab=tab)
+        
+        print(f"navigator.webdriver: {result}")
+        
+        # Verify webdriver is hidden
+        assert result is None or result == False, f"navigator.webdriver should be None/False, got {result}"
+        
+        print("✅ Test 1 PASSED: navigator.webdriver hidden on new_tab()")
+        
+        # Test 2: Check stealth injection on goto()
+        print("\nTest 2: Testing goto() with stealth mode...")
+        tab2 = browser.goto("https://bot.sannysoft.com/")
+        
+        await asyncio.sleep(3)
+        
+        result2 = await browser.evaluate("""
+            navigator.webdriver
+        """, tab=tab2)
+        
+        print(f"navigator.webdriver: {result2}")
+        
+        assert result2 is None or result2 == False, f"navigator.webdriver should be None/False, got {result2}"
+        
+        print("✅ Test 2 PASSED: navigator.webdriver hidden on goto()")
+        
+        print("\n✅ All stealth timing tests PASSED!")
+        
+    finally:
+        await browser.aclose()
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

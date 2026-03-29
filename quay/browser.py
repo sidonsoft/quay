@@ -1034,12 +1034,14 @@ class Browser:
         properly wait for navigation in some environments.
 
         Note:
-            If a URL is provided, navigation starts but does NOT wait for it to complete.
-            The tab object is returned immediately. Use `goto()` if you need to wait
-            for the page to fully load.
+            If stealth mode is enabled, anti-detection scripts are injected
+            synchronously before navigation starts. This ensures all signals
+            (navigator.webdriver, chrome.runtime, cdc_*, puppeteer) are hidden
+            before any page JavaScript executes.
             
-            If stealth mode is enabled, an anti-detection script is injected
-            before any page JavaScript runs.
+            If a URL is provided, navigation starts but does NOT wait for it to complete.
+            The tab object is returned immediately after navigation begins.
+            Use `goto()` if you need to wait for the page to fully load.
         """
         # Create empty tab
         data = self._http_put("/json/new")
@@ -1049,18 +1051,24 @@ class Browser:
         # Inject stealth script if enabled
         if self._stealth:
             try:
-                self._run_async(self._inject_stealth_script(tab))
+                # Wait for stealth injection to complete before navigating
+                self._run_async(self._inject_stealth_script(tab)).result(timeout=5.0)
             except RuntimeError:
                 # Event loop not running, skip injection
                 pass
+            except Exception as e:
+                logger.warning("Stealth script injection failed: %s", e)
 
         # Set up tracker blocklist if enabled
         if self._block_trackers:
             try:
-                self._run_async(self._setup_tracker_blocklist(tab))
+                # Wait for blocklist setup to complete
+                self._run_async(self._setup_tracker_blocklist(tab)).result(timeout=5.0)
             except RuntimeError:
                 # Event loop not running, skip blocklist setup
                 pass
+            except Exception as e:
+                logger.warning("Tracker blocklist setup failed: %s", e)
 
         # Navigate if URL provided (not about:blank)
         if url and url != "about:blank":
