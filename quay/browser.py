@@ -37,6 +37,7 @@ import re
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from contextlib import contextmanager
@@ -104,12 +105,8 @@ _STEALTH_SCRIPT = """
   // Remove window.webdriver (separate from navigator.webdriver)
   delete window.webdriver;
 
-  // Override the chrome object
-  if (window.chrome) {
-    Object.defineProperty(window.chrome, 'runtime', {
-      get: () => undefined
-    });
-  }
+  // Override the chrome object — replace entirely to avoid read-only issues
+  window.chrome = { runtime: undefined };
 
   // Mock permissions
   const originalQuery = window.navigator.permissions.query;
@@ -189,6 +186,145 @@ def _validate_ref(ref: str) -> None:
         raise ValueError(
             f"Invalid ref format: {ref!r}. Expected format: 'axnode@<number>' or '<number>'"
         )
+
+
+def _get_chrome_path() -> str:
+    """
+    Get Chrome executable path based on OS.
+
+    Returns:
+        Path to Chrome executable
+
+    Raises:
+        FileNotFoundError: If Chrome is not found
+    """
+    import platform
+
+    os_name = platform.system()
+
+    if os_name == "Darwin":  # macOS
+        paths = [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        ]
+    elif os_name == "Windows":
+        paths = [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        ]
+    elif os_name == "Linux":
+        paths = [
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+        ]
+    else:
+        raise OSError(f"Unsupported OS: {os_name}")
+
+    for path in paths:
+        if os.path.exists(path):
+            return path
+
+    raise FileNotFoundError(
+        f"Chrome not found. Expected at one of: {', '.join(paths)}"
+    )
+
+
+def _launch_chrome(
+    headless: bool = False,
+    stealth: bool = False,
+    block_trackers: bool = False,
+    port: int = 9222,
+    user_data_dir: str | None = None,
+) -> tuple[str, str]:
+    """
+    Launch Chrome with appropriate flags for automation.
+
+    Args:
+        headless: Run in headless mode
+        stealth: Enable stealth mode (hides automation signals)
+        block_trackers: Block known tracking/bot detection domains
+        port: Remote debugging port
+        user_data_dir: User data directory (None = temp profile)
+
+    Returns:
+        Tuple of (chrome_path, remote_debugging_url)
+
+    Raises:
+        FileNotFoundError: If Chrome is not found
+        subprocess.SubprocessError: If Chrome fails to launch
+    """
+    import subprocess
+    import tempfile
+
+    chrome_path = _get_chrome_path()
+
+    # Build flags
+    flags = [
+        chrome_path,
+        f"--remote-debugging-port={port}",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--disable-background-networking",
+        "--disable-default-apps",
+        "--disable-sync",
+        "--disable-translate",
+        "--metrics-recording-only",
+        "--disable-extensions",
+        "--disable-dev-shm-usage",
+    ]
+
+    # Headless mode
+    if headless:
+        flags.append("--headless=new")
+    else:
+        flags.append("--start-maximized")
+
+    # Stealth mode flags
+    if stealth:
+        flags.extend([
+            "--disable-blink-features=AutomationControlled",
+            "--disable-features=IsolateOrigins,site-per-process",
+        ])
+
+    # User data directory
+    if user_data_dir:
+        flags.extend(["--user-data-dir=" + user_data_dir])
+    else:
+        # Create temporary profile
+        temp_dir = tempfile.mkdtemp(prefix="quay_chrome_profile_")
+        flags.extend(["--user-data-dir=" + temp_dir])
+
+    # Launch Chrome
+    logger.info("Launching Chrome: %s", " ".join(flags[:2]) + "...")
+
+    try:
+        process = subprocess.Popen(
+            flags,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
+
+        # Wait for Chrome to be ready
+        import time
+
+        for _ in range(30):  # 30 second timeout
+            time.sleep(1)
+            try:
+                urllib.request.urlopen(f"http://localhost:{port}/json/version")
+                logger.info("Chrome launched successfully on port %d", port)
+                return chrome_path, f"http://localhost:{port}"
+            except (urllib.error.URLError, ConnectionRefusedError):
+                continue
+
+        raise RuntimeError("Chrome failed to start within 30 seconds")
+
+    except Exception as e:
+        logger.error("Chrome launch error: %s", e)
+        raise
+
 
 
 # Key name to CDP key definition mapping
@@ -457,7 +593,92 @@ class Browser:
             ...
         finally:
             b.close()
+
+    Launching Chrome:
+        # Option 1: Use existing Chrome instance
+        b = Browser(host="localhost", port=9222)
+
+        # Option 2: Launch Chrome with Browser.launch()
+        b = Browser.launch(headless=True, stealth=True, block_trackers=True)
+        b.goto("https://example.com")
+        await b.close()
     """
+
+    @staticmethod
+    def launch(
+        headless: bool = True,
+        stealth: bool = True,
+        block_trackers: bool = True,
+        port: int = 9222,
+        user_data_dir: str | None = None,
+    ) -> Browser:
+        """
+        Launch Chrome and create a Browser instance.
+
+        Convenience method that launches Chrome with appropriate flags
+        and returns a connected Browser instance.
+
+        Args:
+            headless: Run Chrome in headless mode (default: True)
+            stealth: Enable stealth mode (hides automation signals, default: True)
+            block_trackers: Block known tracking/bot detection domains (default: True)
+            port: Remote debugging port (default: 9222)
+            user_data_dir: User data directory (None = temp profile)
+
+        Returns:
+            Browser instance connected to the launched Chrome
+
+        Raises:
+            FileNotFoundError: If Chrome is not found
+            RuntimeError: If Chrome fails to start
+
+        Example:
+            # Launch Chrome with stealth and tracker blocking
+            b = Browser.launch(headless=True, stealth=True, block_trackers=True)
+            b.goto("https://example.com")
+            await b.close()
+
+            # Launch Chrome with visible window and authenticated session
+            b = Browser.launch(headless=False, user_data_dir="/path/to/profile")
+            b.goto("https://gmail.com")
+            await b.close()
+        """
+        # Launch Chrome
+        chrome_path, remote_url = _launch_chrome(
+            headless=headless,
+            stealth=stealth,
+            block_trackers=block_trackers,
+            port=port,
+            user_data_dir=user_data_dir,
+        )
+
+        # Parse host and port from URL
+        parsed = urllib.parse.urlparse(remote_url)
+        host = parsed.hostname or "localhost"
+        port = parsed.port or 9222
+
+        # Create Browser instance
+        browser = Browser(
+            host=host,
+            port=port,
+            stealth=stealth,
+            block_trackers=block_trackers,
+        )
+
+        # Set _current_tab to the first available tab
+        tabs = browser.list_tabs()
+        if tabs:
+            browser._current_tab = tabs[0]
+
+        logger.info(
+            "Browser launched via Browser.launch() - "
+            "headless=%s, stealth=%s, block_trackers=%s",
+            headless,
+            stealth,
+            block_trackers,
+        )
+
+        return browser
 
     def __init__(
         self,
