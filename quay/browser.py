@@ -1089,9 +1089,15 @@ class Browser:
                         timeout=timeout,
                     )
                     if title_result:
-                        tab.title = title_result.get("result", {}).get("value", tab.title) or tab.title
+                        tab.title = (
+                            title_result.get("result", {}).get("value", tab.title)
+                            or tab.title
+                        )
                     if url_result:
-                        tab.url = url_result.get("result", {}).get("value", tab.url) or tab.url
+                        tab.url = (
+                            url_result.get("result", {}).get("value", tab.url)
+                            or tab.url
+                        )
                 return result.get("frameId", "")
             finally:
                 pass
@@ -1630,6 +1636,65 @@ class Browser:
         """Get snapshot string (alias for accessibility_tree().to_tree_str())."""
         tree = self.accessibility_tree(tab)
         return tree.to_tree_str()
+
+    def get_links(self, tab: Tab | None = None) -> list[dict]:
+        """
+        Extract all links from page.
+
+        Returns:
+            List of dicts with keys: text, ref, url
+        """
+        tree = self.accessibility_tree(tab)
+        links = []
+        for node in tree.find_by_role("link"):
+            links.append({
+                "text": node.name,
+                "ref": node.ref,
+                "url": node.url,
+            })
+        return links
+
+    def get_text(self, ref: str | None = None, tab: Tab | None = None) -> str:
+        """
+        Extract text content.
+
+        Args:
+            ref: Optional node ref to extract text from
+            tab: Optional tab to query
+
+        Returns:
+            Text content (empty string if ref not found)
+        """
+        tree = self.accessibility_tree(tab)
+        if ref:
+            node = tree.find(ref)
+            if node:
+                return node.name or ""
+            return ""
+        return tree.name or ""
+
+    def find_links(
+        self,
+        text_contains: str | None = None,
+        tab: Tab | None = None,
+    ) -> list[dict]:
+        """
+        Find links matching text pattern.
+
+        Args:
+            text_contains: Filter links by text (case-insensitive substring match)
+            tab: Optional tab to query
+
+        Returns:
+            List of link dicts matching the filter
+        """
+        links = self.get_links(tab)
+        if text_contains:
+            links = [
+                link for link in links
+                if text_contains.lower() in link["text"].lower()
+            ]
+        return links
 
     # ─────────────────────────────────────────────────────────────────────────────
     # Interactions
