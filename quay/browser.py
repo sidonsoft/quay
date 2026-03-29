@@ -78,6 +78,61 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 9222
 DEFAULT_TIMEOUT = 10.0
 
+# Stealth script to hide automation signals from pages
+_STEALTH_SCRIPT = """
+(function() {
+  // Override the webdriver property
+  Object.defineProperty(navigator, 'webdriver', {
+    get: () => undefined
+  });
+
+  // Remove automation-related properties
+  Object.defineProperty(navigator, 'plugins', {
+    get: () => [1, 2, 3, 4, 5]
+  });
+
+  Object.defineProperty(navigator, 'languages', {
+    get: () => ['en-US', 'en']
+  });
+
+  // Remove CDP-related globals
+  delete window.cdc_adoQpoasnfa76pfcZLmcfl_Chart;
+  delete window.__PuppeteerOverlayObject__;
+  delete window.__PuppeteerIsHeadless__;
+  delete window.__isCdpEnabled__;
+
+  // Remove window.webdriver (separate from navigator.webdriver)
+  delete window.webdriver;
+
+  // Override the chrome object
+  if (window.chrome) {
+    Object.defineProperty(window.chrome, 'runtime', {
+      get: () => undefined
+    });
+  }
+
+  // Mock permissions
+  const originalQuery = window.navigator.permissions.query;
+  window.navigator.permissions.query = (parameters) => {
+    return (parameters.name === 'notifications') ?
+      Promise.resolve({ state: Notification.permission }) :
+      originalQuery(parameters);
+  };
+
+  // Mock webgl vendor
+  const getParameter = WebGLRenderingContext.prototype.getParameter;
+  WebGLRenderingContext.prototype.getParameter = function(parameter) {
+    if (parameter === 37445) {
+      return 'Intel Inc.';
+    }
+    if (parameter === 37446) {
+      return 'Intel Iris OpenGL Engine';
+    }
+    return getParameter(parameter);
+  };
+})();
+"""
+
 
 def escape_js_string(text: str) -> str:
     """
@@ -395,6 +450,7 @@ class Browser:
         reconnect_max_retries: int = 3,
         reconnect_backoff: float = 1.0,
         reconnect_callback: Callable[[str], None] | None = None,
+        stealth: bool = False,
     ):
         """
         Initialize browser connection.
@@ -453,6 +509,8 @@ class Browser:
         self._record_depth: contextvars.ContextVar[int] = contextvars.ContextVar(
             "record_depth", default=0
         )
+        self._stealth = stealth
+        self._stealth_script: str | None = None
 
         # Check connection with optional retries
         if not self._check_connection():
@@ -730,11 +788,22 @@ class Browser:
             If a URL is provided, navigation starts but does NOT wait for it to complete.
             The tab object is returned immediately. Use `goto()` if you need to wait
             for the page to fully load.
+            
+            If stealth mode is enabled, an anti-detection script is injected
+            before any page JavaScript runs.
         """
         # Create empty tab
         data = self._http_put("/json/new")
         tab = Tab.from_dict(data)
         self._current_tab = tab
+
+        # Inject stealth script if enabled — must complete before navigation
+        if self._stealth:
+            try:
+                self._run_async(self._inject_stealth_script(tab))
+            except RuntimeError:
+                # Event loop not running, skip injection
+                pass
 
         # Navigate if URL provided (not about:blank)
         if url and url != "about:blank":
@@ -1044,6 +1113,46 @@ class Browser:
             return True
         finally:
             self._playing_back = False
+
+    # ─────────────────────────────────────────────────────────────────────────────
+    # Stealth Mode
+    # ─────────────────────────────────────────────────────────────────────────────
+
+    async def _inject_stealth_script(self, tab: Tab) -> bool:
+        """
+        Inject stealth script to hide automation signals.
+
+        Args:
+            tab: Tab to inject script into
+
+        Returns:
+            True if injection succeeded
+        """
+        if not self._stealth:
+            return True
+
+        # Initialize script if not already done
+        if self._stealth_script is None:
+            self._stealth_script = _STEALTH_SCRIPT
+
+        try:
+            # Get connection for this tab
+            conn = await self._get_connection(tab)
+
+            # Inject script on page lifecycle init (before any JS runs)
+            result = await conn.send(
+                "Page.addScriptToEvaluateOnNewDocument",
+                params={"source": self._stealth_script},
+            )
+
+            if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument"):
+                logger.warning("Stealth script injection failed: %s", error.message)
+                return False
+
+            return True
+        except Exception as e:
+            logger.warning("Stealth script injection error: %s", e)
+            return False
 
     # ─────────────────────────────────────────────────────────────────────────────
     # Navigation
@@ -3416,3 +3525,70 @@ class Browser:
             self.close()
         except Exception:
             pass
+
+    def is_stealth(self, tab: Tab | None = None) -> dict[str, Any]:
+        """
+        Check if stealth mode is working on the current page.
+
+        Evaluates various anti-detection signals to verify the page
+        cannot detect automation.
+
+        Args:
+            tab: Tab to check (defaults to current tab)
+
+        Returns:
+            Dict with detection status:
+            {
+                'navigator.webdriver': None | bool,
+                'webdriver': bool,
+                'chrome.runtime': bool,
+                'cdc_adoQpoasnfa76pfcZLmcfl_Chart': bool,
+                'puppeteer': bool,
+            }
+        """
+        if tab is None:
+            tab = self._current_tab
+
+        if tab is None:
+            return {
+                "error": "No tab available",
+                "navigator.webdriver": None,
+                "webdriver": None,
+                "chrome.runtime": None,
+                "cdc_adoQpoasnfa76pfcZLmcfl_Chart": None,
+                "puppeteer": None,
+            }
+
+        try:
+            # Check navigator.webdriver (should be undefined/false in stealth)
+            webdriver = self.evaluate("navigator.webdriver", tab=tab)
+
+            # Check window.webdriver (should be falsy in stealth)
+            window_webdriver = self.evaluate("window.webdriver", tab=tab)
+
+            # Check chrome.runtime
+            has_chrome_runtime = self.evaluate(
+                "window.chrome && window.chrome.runtime", tab=tab
+            )
+
+            # Check CDP marker
+            has_cdc = self.evaluate(
+                "window.cdc_adoQpoasnfa76pfcZLmcfl_Chart !== undefined", tab=tab
+            )
+
+            # Check Puppeteer
+            has_puppeteer = self.evaluate(
+                "window.__PuppeteerOverlayObject__ !== undefined || "
+                "window.__PuppeteerIsHeadless__ !== undefined",
+                tab=tab,
+            )
+
+            return {
+                "navigator.webdriver": webdriver,
+                "webdriver": bool(window_webdriver),
+                "chrome.runtime": bool(has_chrome_runtime),
+                "cdc_adoQpoasnfa76pfcZLmcfl_Chart": bool(has_cdc),
+                "puppeteer": bool(has_puppeteer),
+            }
+        except Exception as e:
+            return {"error": str(e)}
