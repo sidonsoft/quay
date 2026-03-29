@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: quay
-Version: 0.1.0
+Version: 0.2.7
 Summary: Chrome DevTools with accessibility-tree semantics
 Author-email: Russell Stephens <russell@sidonsoft.com>
 License: Apache-2.0
@@ -30,13 +30,16 @@ Dynamic: license-file
 
 | Feature | Quay | Playwright | agent-browser | Raw CDP |
 |---------|------|------------|---------------|---------|
-| Accessibility tree | ✅ | ❌ | ✅ | ❌ |
-| Uses your logged-in Chrome | ✅ | ❌ | ❌ | ❌ |
-| Connection pooling | ✅ | ❌ | ❌ | ❌ |
+| Full AX tree (raw CDP nodes) | ✅ | ❌ Simplified snapshot only | ✅ | ❌ |
+| AX ref targeting | ✅ | ❌ | ✅ | ❌ |
+| Uses your logged-in Chrome | ✅ | ❌ | ❌ | ✅ |
+| Connection pooling | ✅ | ✅ BrowserContext | ❌ | ❌ |
 | Auto-reconnect | ✅ | ❌ | ❌ | ❌ |
-| Python-native | ✅ | ✅ | ❌ | ❌ |
-| Session recording | ✅ | ❌ | ❌ | ❌ |
-| Weight | ~20KB | ~MB | ~MB | ~5MB |
+| Python-native | ✅ | ✅ | ❌ JS/TS | ❌ |
+| Session recording | ✅ | ✅ Codegen/trace | ❌ | ❌ |
+| Package size | ~20KB | ~50MB | ~5MB | ~5KB |
+
+**Quay's niche:** Full Chrome accessibility tree + your existing authenticated sessions.
 
 ## Installation
 
@@ -142,6 +145,26 @@ def on_reconnect(msg):
 
 browser = Browser(reconnect_callback=on_reconnect)
 ```
+
+## Architecture
+
+Quay uses a **mixin-based architecture** for maintainability:
+
+```python
+class Browser(
+    BrowserCoreMixin,        # Connection lifecycle
+    BrowserTabsMixin,        # Tab management
+    BrowserCDPMixin,         # Low-level CDP
+    BrowserNavigationMixin,  # Navigation
+    BrowserWaitMixin,        # Wait methods
+    BrowserAccessibilityMixin,  # Accessibility tree
+    BrowserActionsMixin,     # User actions
+    BrowserRecordingMixin,   # Session recording
+):
+    pass
+```
+
+See [docs/internals/ARCHITECTURE.md](docs/internals/ARCHITECTURE.md) for details.
 
 ## License
 

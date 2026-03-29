@@ -1637,6 +1637,75 @@ class Browser:
         tree = self.accessibility_tree(tab)
         return tree.to_tree_str()
 
+    def find_by_ref(self, ref: str, tab: Tab | None = None) -> AXNode | None:
+        """
+        Find a single node by its ref.
+
+        Args:
+            ref: Node ref to find
+            tab: Optional tab to query
+
+        Returns:
+            AXNode if found, None otherwise
+        """
+        tree = self.accessibility_tree(tab)
+        for node in [tree] + self._flatten_tree(tree):
+            if node.ref == ref or node.ref == ref.lstrip("axnode@"):
+                return node
+        return None
+
+    def _flatten_tree(self, node: AXNode) -> list[AXNode]:
+        """Recursively flatten an AXNode tree into a list."""
+        result = []
+        for child in node.children:
+            result.append(child)
+            result.extend(self._flatten_tree(child))
+        return result
+
+    def find_by_name(
+        self,
+        name: str,
+        tab: Tab | None = None,
+        *,
+        exact: bool = False,
+        interactive_only: bool = False,
+    ) -> list[AXNode]:
+        """
+        Find nodes by accessible name.
+
+        Args:
+            name: Text to search for
+            tab: Optional tab to query
+            exact: If True, match name exactly
+            interactive_only: If True, only return interactive elements
+
+        Returns:
+            List of matching AXNode instances
+        """
+        tree = self.accessibility_tree(tab=tab)
+        return tree.find_by_name(name, exact=exact, interactive_only=interactive_only)
+
+    def find_by_value(self, value: str, tab: Tab | None = None) -> list[AXNode]:
+        """
+        Find nodes by value content.
+
+        Args:
+            value: Value substring to match
+            tab: Optional tab to query
+
+        Returns:
+            List of matching AXNode instances
+        """
+        tree = self.accessibility_tree(tab=tab)
+        results = []
+        def search(node):
+            if node.value and value in str(node.value):
+                results.append(node)
+            for child in node.children:
+                search(child)
+        search(tree)
+        return results
+
     def get_links(self, tab: Tab | None = None) -> list[dict]:
         """
         Extract all links from page.
