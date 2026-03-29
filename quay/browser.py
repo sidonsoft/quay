@@ -611,6 +611,7 @@ class Browser:
         block_trackers: bool = True,
         port: int = 9222,
         user_data_dir: str | None = None,
+        profile_path: str | None = None,
     ) -> Browser:
         """
         Launch Chrome and create a Browser instance.
@@ -623,7 +624,8 @@ class Browser:
             stealth: Enable stealth mode (hides automation signals, default: True)
             block_trackers: Block known tracking/bot detection domains (default: True)
             port: Remote debugging port (default: 9222)
-            user_data_dir: User data directory (None = temp profile)
+            user_data_dir: User data directory (None = temp profile, deprecated: use profile_path)
+            profile_path: Persistent profile directory path (None = temp profile, default: None)
 
         Returns:
             Browser instance connected to the launched Chrome
@@ -638,18 +640,26 @@ class Browser:
             b.goto("https://example.com")
             await b.close()
 
+            # Launch Chrome with persistent profile
+            b = Browser.launch(headless=True, profile_path="/tmp/my-browser-profile")
+            b.goto("https://gmail.com")
+            await b.close()
+
             # Launch Chrome with visible window and authenticated session
-            b = Browser.launch(headless=False, user_data_dir="/path/to/profile")
+            b = Browser.launch(headless=False, profile_path="/Users/burnz/.config/google-chrome/Default")
             b.goto("https://gmail.com")
             await b.close()
         """
+        # Map profile_path to user_data_dir (profile_path is the public API)
+        effective_user_data_dir = profile_path or user_data_dir
+
         # Launch Chrome
         chrome_path, remote_url = _launch_chrome(
             headless=headless,
             stealth=stealth,
             block_trackers=block_trackers,
             port=port,
-            user_data_dir=user_data_dir,
+            user_data_dir=effective_user_data_dir,
         )
 
         # Parse host and port from URL
@@ -663,6 +673,7 @@ class Browser:
             port=port,
             stealth=stealth,
             block_trackers=block_trackers,
+            profile_path=effective_user_data_dir,
         )
 
         # Set _current_tab to the first available tab
@@ -695,6 +706,7 @@ class Browser:
         reconnect_callback: Callable[[str], None] | None = None,
         stealth: bool = False,
         block_trackers: bool = False,
+        profile_path: str | None = None,
     ):
         """
         Initialize browser connection.
@@ -711,6 +723,9 @@ class Browser:
 
             # Block known tracking/bot detection domains:
             browser = Browser(block_trackers=True)
+
+            # Use persistent profile:
+            browser = Browser(profile_path="/tmp/my-browser-profile")
 
             # Monitor reconnection:
             def on_reconnect(msg):
@@ -729,6 +744,9 @@ class Browser:
             reconnect_max_retries: Maximum reconnection attempts (default: 3)
             reconnect_backoff: Base backoff time for reconnection (default: 1.0s)
             reconnect_callback: Called with status messages during reconnect
+            stealth: Enable stealth mode (hides automation signals, default: False)
+            block_trackers: Block known tracking/bot detection domains (default: False)
+            profile_path: Persistent profile directory path (None = temp profile, default: None)
 
         Raises:
             ConnectionError: If Chrome DevTools is not reachable
@@ -760,6 +778,7 @@ class Browser:
         )
         self._stealth = stealth
         self._stealth_script: str | None = None
+        self._profile_path: str | None = profile_path
 
         # Check connection with optional retries
         if not self._check_connection():
