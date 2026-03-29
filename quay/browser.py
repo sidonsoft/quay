@@ -133,6 +133,28 @@ _STEALTH_SCRIPT = """
 })();
 """
 
+# Blocklist of known bot detection and tracking domains
+# These are blocked via CDP Network interception when block_trackers=True
+_BLOCKLIST = [
+    # Analytics & Fingerprinting
+    "google-analytics.com",
+    "googletagmanager.com",
+    "facebook.net",
+    "hotjar.com",
+    "mixpanel.com",
+    "newrelic.com",
+    "segment.io",
+    # Bot Detection
+    "distilnetworks.com",
+    "shapesecurity.com",
+    "riskified.com",
+    "arkose.com",
+    # CAPTCHA (optional — comment out if you need them)
+    "google.com/recaptcha",
+    "hcaptcha.com",
+    "friendlycaptcha.com",
+]
+
 
 def escape_js_string(text: str) -> str:
     """
@@ -451,6 +473,7 @@ class Browser:
         reconnect_backoff: float = 1.0,
         reconnect_callback: Callable[[str], None] | None = None,
         stealth: bool = False,
+        block_trackers: bool = False,
     ):
         """
         Initialize browser connection.
@@ -462,8 +485,11 @@ class Browser:
             # Disable auto-reconnect:
             browser = Browser(reconnect=False)
 
-            # Custom retry config:
-            browser = Browser(reconnect_max_retries=5, reconnect_backoff=0.5)
+            # Enable stealth mode:
+            browser = Browser(stealth=True)
+
+            # Block known tracking/bot detection domains:
+            browser = Browser(block_trackers=True)
 
             # Monitor reconnection:
             def on_reconnect(msg):
@@ -502,6 +528,8 @@ class Browser:
         self.base_url = f"http://{host}:{port}"
         self._current_tab: Tab | None = None
         self._pool: ConnectionPool | None = None
+        self._block_trackers = block_trackers
+        self._blocked_urls: set[str] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
         self._loop_lock = threading.Lock()
         self._recording: Recording | None = None
@@ -797,12 +825,20 @@ class Browser:
         tab = Tab.from_dict(data)
         self._current_tab = tab
 
-        # Inject stealth script if enabled — must complete before navigation
+        # Inject stealth script if enabled
         if self._stealth:
             try:
                 self._run_async(self._inject_stealth_script(tab))
             except RuntimeError:
                 # Event loop not running, skip injection
+                pass
+
+        # Set up tracker blocklist if enabled
+        if self._block_trackers:
+            try:
+                self._run_async(self._setup_tracker_blocklist(tab))
+            except RuntimeError:
+                # Event loop not running, skip blocklist setup
                 pass
 
         # Navigate if URL provided (not about:blank)
@@ -1152,6 +1188,107 @@ class Browser:
             return True
         except Exception as e:
             logger.warning("Stealth script injection error: %s", e)
+            return False
+
+    # ─────────────────────────────────────────────────────────────────────────────
+    # Tracker Blocking
+    # ─────────────────────────────────────────────────────────────────────────────
+
+    async def _setup_tracker_blocklist(self, tab: Tab) -> bool:
+        """
+        Set up CDP network interception to block known tracking/bot detection domains.
+
+        Args:
+            tab: Tab to block trackers on
+
+        Returns:
+            True if setup succeeded
+        """
+        if not self._block_trackers:
+            return True
+
+        try:
+            conn = await self._get_connection(tab)
+
+            # Enable Network domain for interception
+            await conn.send("Network.enable")
+
+            # Build patterns for blocking — CDP needs one pattern per entry
+            blocked_patterns = [
+                {"urlPattern": f"*{domain}*"} for domain in _BLOCKLIST
+            ]
+
+            # Set up request interception
+            result = await conn.send(
+                "Network.setRequestInterception",
+                params={"patterns": blocked_patterns},
+            )
+
+            if error := parse_cdp_error(result, "Network.setRequestInterception"):
+                logger.warning("Tracker blocklist setup failed: %s", error.message)
+                return False
+
+            # Register callback for intercepted requests
+            def on_intercepted_request(params: dict) -> None:
+                interception_id = params.get("interceptionId")
+                url = params.get("request", {}).get("url", "")
+                if interception_id and url:
+                    # Handle in background (don't block the event)
+                    try:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(self._handle_blocked_request(tab, interception_id, url))
+                    except RuntimeError:
+                        # No running loop, skip
+                        pass
+
+            conn.on_event("Network.requestIntercepted", on_intercepted_request)
+
+            logger.info("Tracker blocking enabled for %d domains", len(_BLOCKLIST))
+            return True
+        except Exception as e:
+            logger.warning("Tracker blocklist setup error: %s", e)
+            return False
+
+    async def _handle_blocked_request(self, tab: Tab, interception_id: str, url: str) -> bool:
+        """
+        Handle a network request intercepted by CDP.
+
+        Blocks requests matching tracker domains, continues others.
+
+        Args:
+            tab: Tab the request is for
+            interception_id: CDP interception ID (from Network.requestIntercepted)
+            url: Request URL
+
+        Returns:
+            True if request was blocked
+        """
+        # Check if URL matches any blocked domain
+        for domain in _BLOCKLIST:
+            if domain in url:
+                try:
+                    conn = await self._get_connection(tab)
+                    # Abort the request
+                    await conn.send(
+                        "Network.abortRequest",
+                        params={"interceptionId": interception_id},
+                    )
+                    logger.debug("Blocked tracker: %s", url)
+                    return True
+                except Exception as e:
+                    logger.warning("Failed to abort request %s: %s", interception_id, e)
+                    return False
+
+        # Continue non-blocked requests
+        try:
+            conn = await self._get_connection(tab)
+            await conn.send(
+                "Network.continueRequest",
+                params={"interceptionId": interception_id},
+            )
+            return False
+        except Exception as e:
+            logger.warning("Failed to continue request %s: %s", interception_id, e)
             return False
 
     # ─────────────────────────────────────────────────────────────────────────────
