@@ -1074,6 +1074,24 @@ class Browser:
                     domains=["Page"],
                     timeout=timeout,
                 )
+                # Refresh tab metadata after navigation
+                if tab:
+                    title_result = await self._send_cdp(
+                        conn,
+                        "Runtime.evaluate",
+                        {"expression": "document.title", "returnByValue": True},
+                        timeout=timeout,
+                    )
+                    url_result = await self._send_cdp(
+                        conn,
+                        "Runtime.evaluate",
+                        {"expression": "document.URL", "returnByValue": True},
+                        timeout=timeout,
+                    )
+                    if title_result:
+                        tab.title = title_result.get("result", {}).get("value", tab.title) or tab.title
+                    if url_result:
+                        tab.url = url_result.get("result", {}).get("value", tab.url) or tab.url
                 return result.get("frameId", "")
             finally:
                 pass
