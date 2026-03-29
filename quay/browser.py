@@ -1145,7 +1145,7 @@ class Browser:
             self._record_depth.reset(token)
 
     def wait_for_load_state(
-        self, state: str = "load", tab: Tab | str | None = None, timeout: float = 10.0
+        self, state: str = "load", tab: Tab | str | None = None, timeout: float = 30.0
     ) -> bool:
         """
         Wait until the page reaches a specific load state.
@@ -1212,7 +1212,7 @@ class Browser:
         selector: str | None = None,
         text: str | None = None,
         tab: Tab | str | None = None,
-        timeout: float = 10.0,
+        timeout: float = 30.0,
     ) -> bool:
         """
         Wait for element or text to appear.
@@ -1266,7 +1266,7 @@ class Browser:
         url: str | None = None,
         pattern: str | None = None,
         tab: Tab | str | None = None,
-        timeout: float = 10.0,
+        timeout: float = 30.0,
     ) -> bool:
         """
         Wait for page URL to match.
@@ -1318,7 +1318,7 @@ class Browser:
     def wait_for_selector_visible(
         self,
         selector: str,
-        timeout: float = 10.0,
+        timeout: float = 30.0,
     ) -> bool:
         """
         Wait for element to be visible (displayed and not hidden).
@@ -1361,7 +1361,7 @@ class Browser:
     def wait_for_selector_hidden(
         self,
         selector: str,
-        timeout: float = 10.0,
+        timeout: float = 30.0,
     ) -> bool:
         """
         Wait for element to be hidden or removed from DOM.
@@ -1404,7 +1404,7 @@ class Browser:
     def wait_for_function(
         self,
         js_function: str,
-        timeout: float = 10.0,
+        timeout: float = 30.0,
         polling_interval: float = 0.2,
     ) -> bool:
         """
@@ -1445,7 +1445,7 @@ class Browser:
     def wait_for_navigation(
         self,
         tab: Tab | str | None = None,
-        timeout: float = 10.0,
+        timeout: float = 30.0,
         wait_until: str = "load",
     ) -> bool:
         """
