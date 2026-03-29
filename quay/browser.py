@@ -3500,25 +3500,13 @@ class Browser:
             for c in cookies:
                 print(f"{c['name']}: {c['value']}")
         """
-
-        async def _get_cookies() -> list[dict]:
+        async def _get() -> list[dict]:
             conn = await self._get_connection(tab)
-
-            # Enable Network domain if not already enabled
             await self._send_cdp(conn, "Network.enable", domains=["Network"])
-
-            if urls:
-                result = await self._send_cdp(
-                    conn, "Network.getCookies", {"urls": urls}, domains=["Network"]
-                )
-            else:
-                result = await self._send_cdp(
-                    conn, "Network.getCookies", {}, domains=["Network"]
-                )
-
+            result = await self._send_cdp(conn, "Network.getCookies", {}, domains=["Network"])
             return result.get("cookies", [])
 
-        return self._run_async(_get_cookies())
+        return self._run_async(_get())
 
     def set_cookies(
         self,
@@ -3700,6 +3688,98 @@ class Browser:
                     )
 
         return self._run_async(_delete_cookies())
+
+    # ─────────────────────────────────────────────────────────────────────────────
+    # Cookie Export/Import
+    # ─────────────────────────────────────────────────────────────────────────────
+
+    def export_cookies(self, file_path: str, tab: Tab | None = None) -> None:
+        """
+        Export cookies to a JSON file.
+
+        Args:
+            file_path: Path to save cookies JSON file
+            tab: Tab to export cookies from (defaults to current)
+
+        Example:
+            browser.export_cookies("cookies.json")
+
+            # Export from specific tab
+            tab = browser.goto("https://example.com")
+            browser.export_cookies("example_cookies.json", tab=tab)
+        """
+        import json
+
+        async def _export() -> None:
+            cookies = await self._get_cookies_internal(tab=tab)
+            with open(file_path, "w") as f:
+                json.dump(cookies, f, indent=2)
+
+        # Don't await - let _run_async handle it
+        self._run_async(_export())
+
+    def import_cookies(self, file_path: str, tab: Tab | None = None) -> None:
+        """
+        Import cookies from a JSON file.
+
+        Args:
+            file_path: Path to cookies JSON file
+            tab: Tab to import cookies to (defaults to current)
+
+        Example:
+            browser.import_cookies("cookies.json")
+
+            # Import to specific tab
+            tab = browser.goto("https://example.com")
+            browser.import_cookies("example_cookies.json", tab=tab)
+        """
+        import json
+
+        async def _import() -> None:
+            with open(file_path, "r") as f:
+                cookies = json.load(f)
+
+            # Validate cookies
+            for i, cookie in enumerate(cookies):
+                required = {"name", "value"}
+                missing = required - set(cookie.keys())
+                if missing:
+                    raise ValueError(
+                        f"Cookie at index {i} missing required key(s): {', '.join(missing)}. "
+                        f"Each cookie must have 'name' and 'value'."
+                    )
+
+            await self._set_cookies_internal(cookies, tab=tab)
+
+        # Don't await - let _run_async handle it
+        self._run_async(_import())
+
+    async def _get_cookies_internal(self, tab: Tab | None = None) -> list[dict]:
+        """Internal method to get cookies without wrapping in _run_async."""
+        conn = await self._get_connection(tab)
+        await self._send_cdp(conn, "Network.enable", domains=["Network"])
+        result = await self._send_cdp(conn, "Network.getCookies", {}, domains=["Network"])
+        return result.get("cookies", [])
+
+    async def _set_cookies_internal(self, cookies: list[dict], tab: Tab | None = None) -> None:
+        """Internal method to set cookies without wrapping in _run_async."""
+        conn = await self._get_connection(tab)
+        await self._send_cdp(conn, "Network.enable", domains=["Network"])
+
+        # Get current page URL for cookies without url/domain
+        current_tab = self._get_current_tab()
+        current_url = current_tab.url if current_tab else ""
+
+        for cookie in cookies:
+            cookie_copy = dict(cookie)
+            if "url" not in cookie_copy and "domain" not in cookie_copy:
+                cookie_copy["url"] = current_url
+            await self._send_cdp(
+                conn,
+                "Network.setCookie",
+                cookie_copy,
+                domains=["Network"],
+            )
 
     # ─────────────────────────────────────────────────────────────────────────────
     # Network Interception
