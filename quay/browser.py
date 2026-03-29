@@ -3368,10 +3368,39 @@ class Browser:
 
         if self._pool and self._loop:
             try:
-                self._run_async(self._pool.close_all())
+                loop = self._loop
+                if loop.is_running():
+                    # Schedule cleanup to run — cannot await from sync code in a running loop
+                    # Use call_soon to ensure it runs before the loop processes more events
+                    loop.call_soon(lambda: asyncio.ensure_future(self._pool.close_all()))
+                else:
+                    loop.run_until_complete(self._pool.close_all())
             except RuntimeError:
                 # Event loop may be closed, ignore
                 pass
+
+    async def aclose(self) -> None:
+        """Async close — properly awaits all cleanup. Use this from async code."""
+        self._interceptors.clear()
+        self._interceptor_filters.clear()
+        self.reconnect_enabled = False
+
+        if self._reconnect_tasks:
+            for task in list(self._reconnect_tasks):
+                if not task.done():
+                    task.cancel()
+            self._reconnect_tasks.clear()
+
+        if self._pool:
+            await self._pool.close_all()
+
+    async def __aenter__(self) -> Browser:
+        """Async context manager entry."""
+        return self
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        """Async context manager exit — properly awaits cleanup."""
+        await self.aclose()
 
     def __enter__(self) -> Browser:
         """Context manager entry."""
