@@ -81,6 +81,6 @@
     };
 
     // Expose spoofing flag
-    window.__webgl_spoofed = true;
+    window.__quay_webgl_spoofed = true;
     console.log('[Quay] WebGL spoofing enabled - extensions and renderer info hidden');
 })();

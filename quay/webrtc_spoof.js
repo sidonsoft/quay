@@ -36,6 +36,6 @@
     };
     
     // Expose spoofing flag
-    window.__webrtc_spoofed = true;
+    window.__quay_webrtc_spoofed = true;
     console.log('[Quay] WebRTC spoofing enabled - IP leaks prevented');
 })();

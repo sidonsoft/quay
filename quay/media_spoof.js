@@ -60,6 +60,6 @@
     };
     
     // Expose spoofing flag
-    window.__media_spoofed = true;
+    window.__quay_media_spoofed = true;
     console.log('[Quay] Media device spoofing enabled - fingerprinting prevented');
 })();
