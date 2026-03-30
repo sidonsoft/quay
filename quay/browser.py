@@ -1458,18 +1458,33 @@ class Browser:
                 return self._loop
 
     def _run_async(self, coro: Any) -> Any:
-        """Run coroutine on shared event loop."""
+        """Run coroutine on shared event loop.
+        
+        Returns the actual result value, not a Task/Future object.
+        """
         loop = self._get_loop()
         if threading.current_thread() is threading.main_thread():
             if loop.is_running():
                 # Cannot block if the loop is already running in this thread
                 # This happens during async tests or if called from a callback
+                # Return the Task object - caller must call .result()
                 return loop.create_task(coro)
             return loop.run_until_complete(coro)
         else:
             # Thread-safe execution
             future = asyncio.run_coroutine_threadsafe(coro, loop)
             return future.result()
+    
+    def _await_task(self, task_or_result: Any) -> Any:
+        """Helper to get result from Task object or return value directly.
+        
+        If task_or_result is a Task/Future, call .result() to get the actual value.
+        Otherwise, return it directly.
+        """
+        if hasattr(task_or_result, "result"):
+            # It's a Task or Future object
+            return task_or_result.result()
+        return task_or_result
 
     def _load_script(self, filename: str) -> str:
         """Load a spoofing script from the package data directory."""
@@ -4420,7 +4435,7 @@ class Browser:
             inner_result = result.get("result", result)
             return inner_result.get("value") if isinstance(inner_result, dict) else None
 
-        return self._run_async(_eval())
+        return self._await_task(self._run_async(_eval()))
 
     # ─────────────────────────────────────────────────────────────────────────────
     # Cookies
