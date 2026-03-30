@@ -145,7 +145,39 @@ _DEVICES = {
 }
 
 # Stealth script to hide automation signals from pages
-_STEALTH_SCRIPT = """
+# Basic mode - essential anti-detection
+_STEALTH_SCRIPT_BASIC = """
+(function() {
+  // Override the webdriver property
+  Object.defineProperty(navigator, 'webdriver', {
+    get: () => undefined
+  });
+
+  // Remove automation-related properties
+  Object.defineProperty(navigator, 'plugins', {
+    get: () => [1, 2, 3, 4, 5]
+  });
+
+  Object.defineProperty(navigator, 'languages', {
+    get: () => ['en-US', 'en']
+  });
+
+  // Remove CDP-related globals
+  delete window.cdc_adoQpoasnfa76pfcZLmcfl_Chart;
+  delete window.__PuppeteerOverlayObject__;
+  delete window.__PuppeteerIsHeadless__;
+  delete window.__isCdpEnabled__;
+
+  // Remove window.webdriver (separate from navigator.webdriver)
+  delete window.webdriver;
+
+  // Override the chrome object — replace entirely to avoid read-only issues
+  window.chrome = { runtime: undefined };
+})();
+"""
+
+# Balanced mode - adds canvas/audio fingerprinting prevention
+_STEALTH_SCRIPT_BALANCED = """
 (function() {
   // Override the webdriver property
   Object.defineProperty(navigator, 'webdriver', {
@@ -191,6 +223,145 @@ _STEALTH_SCRIPT = """
       return 'Intel Iris OpenGL Engine';
     }
     return getParameter(parameter);
+  };
+
+  // Canvas fingerprinting prevention
+  const toDataURL = HTMLCanvasElement.prototype.toDataURL;
+  HTMLCanvasElement.prototype.toDataURL = function() {
+    if (arguments.length > 0 && typeof arguments[0] === 'string' && arguments[0].startsWith('image/')) {
+      return toDataURL.apply(this, ['image/png']);
+    }
+    return toDataURL.apply(this, arguments);
+  };
+
+  // AudioContext fingerprinting prevention
+  const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+  if (AudioContextConstructor) {
+    window.AudioContext = function() {
+      const audioContext = new AudioContextConstructor();
+      const originalGetDestination = audioContext.destination;
+      Object.defineProperty(audioContext, 'destination', {
+        get: () => originalGetDestination
+      });
+      return audioContext;
+    };
+    window.AudioContext.prototype = AudioContextConstructor.prototype;
+  }
+})();
+"""
+
+# Aggressive mode - all anti-detection techniques
+_STEALTH_SCRIPT_AGGRESSIVE = """
+(function() {
+  // Override the webdriver property
+  Object.defineProperty(navigator, 'webdriver', {
+    get: () => undefined
+  });
+
+  // Remove automation-related properties
+  Object.defineProperty(navigator, 'plugins', {
+    get: () => [1, 2, 3, 4, 5]
+  });
+
+  Object.defineProperty(navigator, 'languages', {
+    get: () => ['en-US', 'en']
+  });
+
+  // Remove CDP-related globals
+  delete window.cdc_adoQpoasnfa76pfcZLmcfl_Chart;
+  delete window.__PuppeteerOverlayObject__;
+  delete window.__PuppeteerIsHeadless__;
+  delete window.__isCdpEnabled__;
+
+  // Remove window.webdriver (separate from navigator.webdriver)
+  delete window.webdriver;
+
+  // Override the chrome object — replace entirely to avoid read-only issues
+  window.chrome = { runtime: undefined };
+
+  // Mock permissions
+  const originalQuery = window.navigator.permissions.query;
+  window.navigator.permissions.query = (parameters) => {
+    return (parameters.name === 'notifications') ?
+      Promise.resolve({ state: Notification.permission }) :
+      originalQuery(parameters);
+  };
+
+  // Mock webgl vendor
+  const getParameter = WebGLRenderingContext.prototype.getParameter;
+  WebGLRenderingContext.prototype.getParameter = function(parameter) {
+    if (parameter === 37445) {
+      return 'Intel Inc.';
+    }
+    if (parameter === 37446) {
+      return 'Intel Iris OpenGL Engine';
+    }
+    return getParameter(parameter);
+  };
+
+  // Canvas fingerprinting prevention
+  const toDataURL = HTMLCanvasElement.prototype.toDataURL;
+  HTMLCanvasElement.prototype.toDataURL = function() {
+    if (arguments.length > 0 && typeof arguments[0] === 'string' && arguments[0].startsWith('image/')) {
+      return toDataURL.apply(this, ['image/png']);
+    }
+    return toDataURL.apply(this, arguments);
+  };
+
+  // AudioContext fingerprinting prevention
+  const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+  if (AudioContextConstructor) {
+    window.AudioContext = function() {
+      const audioContext = new AudioContextConstructor();
+      const originalGetDestination = audioContext.destination;
+      Object.defineProperty(audioContext, 'destination', {
+        get: () => originalGetDestination
+      });
+      return audioContext;
+    };
+    window.AudioContext.prototype = AudioContextConstructor.prototype;
+  }
+
+  // Screen dimensions spoofing
+  const screenGet = Object.getOwnPropertyDescriptor(Screen.prototype, 'width');
+  Object.defineProperty(screenGet, 'get', {
+    value: function() {
+      return 1920;
+    }
+  });
+  Object.defineProperty(screenGet, 'set', {
+    value: undefined
+  });
+
+  // Performance API override
+  const originalPerformanceTiming = PerformanceTiming.prototype;
+  Object.defineProperty(PerformanceTiming.prototype, 'navigationStart', {
+    get: function() {
+      return Date.now() - Math.random() * 1000;
+    }
+  });
+
+  // Notification API override
+  const originalNotification = window.Notification;
+  if (originalNotification) {
+    window.Notification.requestPermission = function() {
+      return Promise.resolve('granted');
+    };
+  }
+
+  // MediaDevices API spoofing
+  const originalGetDevices = navigator.mediaDevices.enumerateDevices;
+  navigator.mediaDevices.enumerateDevices = function() {
+    return originalGetDevices.call(navigator.mediaDevices).then(devices => {
+      return devices.map(device => {
+        // Spoof device IDs to prevent fingerprinting
+        return {
+          ...device,
+          deviceId: 'spoofed_' + Math.random().toString(36).substr(2, 9),
+          label: 'Default Device ' + device.kind
+        };
+      });
+    });
   };
 })();
 """
@@ -673,6 +844,7 @@ class Browser:
     def launch(
         headless: bool = True,
         stealth: bool = True,
+        stealth_mode: str = "basic",
         block_trackers: bool = True,
         port: int = 9222,
         user_data_dir: str | None = None,
@@ -687,6 +859,7 @@ class Browser:
         Args:
             headless: Run Chrome in headless mode (default: True)
             stealth: Enable stealth mode (hides automation signals, default: True)
+            stealth_mode: Stealth mode level ("basic", "balanced", "aggressive", default: "basic")
             block_trackers: Block known tracking/bot detection domains (default: True)
             port: Remote debugging port (default: 9222)
             user_data_dir: User data directory (None = temp profile, deprecated: use profile_path)
@@ -698,10 +871,16 @@ class Browser:
         Raises:
             FileNotFoundError: If Chrome is not found
             RuntimeError: If Chrome fails to start
+            ValueError: If invalid stealth_mode is provided
 
         Example:
             # Launch Chrome with stealth and tracker blocking
             b = Browser.launch(headless=True, stealth=True, block_trackers=True)
+            b.goto("https://example.com")
+            await b.close()
+
+            # Launch Chrome with aggressive stealth
+            b = Browser.launch(headless=True, stealth=True, stealth_mode="aggressive")
             b.goto("https://example.com")
             await b.close()
 
@@ -715,6 +894,11 @@ class Browser:
             b.goto("https://gmail.com")
             await b.close()
         """
+        if stealth_mode not in ["basic", "balanced", "aggressive"]:
+            raise ValueError(
+                f"Invalid stealth_mode: {stealth_mode}. "
+                f"Must be one of: 'basic', 'balanced', 'aggressive'"
+            )
         # Map profile_path to user_data_dir (profile_path is the public API)
         effective_user_data_dir = profile_path or user_data_dir
 
@@ -737,6 +921,7 @@ class Browser:
             host=host,
             port=port,
             stealth=stealth,
+            stealth_mode=stealth_mode,
             block_trackers=block_trackers,
             profile_path=effective_user_data_dir,
         )
@@ -770,6 +955,7 @@ class Browser:
         reconnect_backoff: float = 1.0,
         reconnect_callback: Callable[[str], None] | None = None,
         stealth: bool = False,
+        stealth_mode: str = "basic",
         block_trackers: bool = False,
         profile_path: str | None = None,
     ):
@@ -783,8 +969,11 @@ class Browser:
             # Disable auto-reconnect:
             browser = Browser(reconnect=False)
 
-            # Enable stealth mode:
+            # Enable stealth mode (basic):
             browser = Browser(stealth=True)
+
+            # Enable stealth mode (aggressive):
+            browser = Browser(stealth=True, stealth_mode="aggressive")
 
             # Block known tracking/bot detection domains:
             browser = Browser(block_trackers=True)
@@ -810,12 +999,19 @@ class Browser:
             reconnect_backoff: Base backoff time for reconnection (default: 1.0s)
             reconnect_callback: Called with status messages during reconnect
             stealth: Enable stealth mode (hides automation signals, default: False)
+            stealth_mode: Stealth mode level ("basic", "balanced", "aggressive", default: "basic")
             block_trackers: Block known tracking/bot detection domains (default: False)
             profile_path: Persistent profile directory path (None = temp profile, default: None)
 
         Raises:
             ConnectionError: If Chrome DevTools is not reachable
+            ValueError: If invalid stealth_mode is provided
         """
+        if stealth_mode not in ["basic", "balanced", "aggressive"]:
+            raise ValueError(
+                f"Invalid stealth_mode: {stealth_mode}. "
+                f"Must be one of: 'basic', 'balanced', 'aggressive'"
+            )
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -842,6 +1038,7 @@ class Browser:
             "record_depth", default=0
         )
         self._stealth = stealth
+        self._stealth_mode: str = stealth_mode
         self._stealth_script: str | None = None
         self._profile_path: str | None = profile_path
 
@@ -1486,7 +1683,15 @@ class Browser:
 
         # Initialize script if not already done
         if self._stealth_script is None:
-            self._stealth_script = _STEALTH_SCRIPT
+            # Select script based on stealth_mode
+            if self._stealth_mode == "basic":
+                self._stealth_script = _STEALTH_SCRIPT_BASIC
+            elif self._stealth_mode == "balanced":
+                self._stealth_script = _STEALTH_SCRIPT_BALANCED
+            elif self._stealth_mode == "aggressive":
+                self._stealth_script = _STEALTH_SCRIPT_AGGRESSIVE
+            else:
+                self._stealth_script = _STEALTH_SCRIPT_BASIC
 
         try:
             # Get connection for this tab
@@ -4228,6 +4433,19 @@ class Browser:
             self.close()
         except Exception:
             pass
+
+    def get_stealth_mode(self) -> str:
+        """
+        Get the current stealth mode level.
+
+        Returns:
+            Stealth mode level: "basic", "balanced", or "aggressive"
+
+        Example:
+            mode = browser.get_stealth_mode()
+            print(f"Stealth mode: {mode}")
+        """
+        return self._stealth_mode
 
     def is_stealth(self, tab: Tab | None = None) -> dict[str, Any]:
         """
