@@ -1076,6 +1076,171 @@ class Browser:
         # Register cleanup on program exit
         atexit.register(self._cleanup)
 
+        # Note: Spoofing scripts are injected per-tab in new_tab() before navigation
+        # This ensures scripts execute before page JavaScript loads
+
+    def _inject_spoofing_scripts(self) -> None:
+        """
+        Inject all spoofing scripts at browser level.
+
+        These scripts are injected using Page.addScriptToEvaluateOnNewDocument
+        at browser initialization time, so they apply to ALL future tabs.
+        """
+        try:
+            # Create an async task to inject scripts
+            result = self._run_async(self._inject_spoofing_scripts_async())
+            if not result:
+                logger.warning("Failed to inject spoofing scripts at browser init")
+
+        except Exception as e:
+            logger.warning(f"Failed to inject spoofing scripts at browser init: {e}")
+
+    async def _inject_spoofing_scripts_async(self) -> bool:
+        """Async version of spoofing script injection.
+        
+        Note: This must be called after at least one tab exists, as we need
+        a tab's WebSocket connection to inject scripts at browser level.
+        The injected scripts will apply to ALL future tabs.
+        """
+        try:
+            # Wait for first tab to exist (create one if needed)
+            tabs = self.list_tabs()
+            if not tabs:
+                # Create a temporary about:blank tab just for injection
+                temp_tab = await self.new_tab("about:blank")
+            else:
+                temp_tab = tabs[0]
+            
+            # Get connection for the tab
+            conn = await self._get_connection(temp_tab)
+
+            # Inject WebRTC spoofing script
+            if self._webrtc_spoof:
+                if self._webrtc_spoof_script is None:
+                    self._webrtc_spoof_script = self._load_script('webrtc_spoof.js')
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._webrtc_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (WebRTC)"):
+                    logger.warning(f"WebRTC spoof script injection failed: {error.message}")
+
+            # Inject media spoofing script
+            if self._media_spoof:
+                if self._media_spoof_script is None:
+                    self._media_spoof_script = self._load_script('media_spoof.js')
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._media_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (Media)"):
+                    logger.warning(f"Media spoof script injection failed: {error.message}")
+
+            # Inject WebGL spoofing script
+            if self._webgl_spoof:
+                if self._webgl_spoof_script is None:
+                    self._webgl_spoof_script = self._load_script('webgl_spoof.js')
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._webgl_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (WebGL)"):
+                    logger.warning(f"WebGL spoof script injection failed: {error.message}")
+
+            # Inject font spoofing script
+            if self._font_spoof:
+                if self._font_spoof_script is None:
+                    self._font_spoof_script = self._load_script('font_spoof.js')
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._font_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (Font)"):
+                    logger.warning(f"Font spoof script injection failed: {error.message}")
+
+            return True
+
+        except Exception as e:
+            logger.warning(f"Failed to inject spoofing scripts at browser init: {e}")
+            return False
+
+    async def _inject_spoofing_scripts_for_tab_async(self, tab: Tab) -> bool:
+        """Async version of spoofing script injection for a specific tab.
+        
+        This is called per-tab in new_tab() before navigation.
+        """
+        try:
+            # Get connection for this tab
+            conn = await self._get_connection(tab)
+
+            # Inject stealth script
+            if self._stealth and self._stealth_script is None:
+                self._stealth_script = self._load_script('stealth.js')
+            if self._stealth:
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._stealth_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (Stealth)"):
+                    logger.warning(f"Stealth script injection failed: {error.message}")
+
+            # Inject WebRTC spoofing script
+            if self._webrtc_spoof and self._webrtc_spoof_script is None:
+                self._webrtc_spoof_script = self._load_script('webrtc_spoof.js')
+            if self._webrtc_spoof:
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._webrtc_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (WebRTC)"):
+                    logger.warning(f"WebRTC spoof script injection failed: {error.message}")
+
+            # Inject media spoofing script
+            if self._media_spoof and self._media_spoof_script is None:
+                self._media_spoof_script = self._load_script('media_spoof.js')
+            if self._media_spoof:
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._media_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (Media)"):
+                    logger.warning(f"Media spoof script injection failed: {error.message}")
+
+            # Inject WebGL spoofing script
+            if self._webgl_spoof and self._webgl_spoof_script is None:
+                self._webgl_spoof_script = self._load_script('webgl_spoof.js')
+            if self._webgl_spoof:
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._webgl_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (WebGL)"):
+                    logger.warning(f"WebGL spoof script injection failed: {error.message}")
+
+            # Inject font spoofing script
+            if self._font_spoof and self._font_spoof_script is None:
+                self._font_spoof_script = self._load_script('font_spoof.js')
+            if self._font_spoof:
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._font_spoof_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (Font)"):
+                    logger.warning(f"Font spoof script injection failed: {error.message}")
+
+            return True
+
+        except Exception as e:
+            logger.warning(f"Failed to inject spoofing scripts for tab {tab.id}: {e}")
+            return False
+
+    def _inject_spoofing_scripts_for_tab(self, tab: Tab) -> None:
+        """Sync wrapper for async spoofing script injection."""
+        try:
+            result = self._run_async(self._inject_spoofing_scripts_for_tab_async(tab))
+        except Exception as e:
+            logger.warning(f"Failed to schedule spoofing script injection: {e}")
+
     # ─────────────────────────────────────────────────────────────────────────────
     # Connection Management
     # ─────────────────────────────────────────────────────────────────────────────
@@ -1460,53 +1625,6 @@ class Browser:
         tab = Tab.from_dict(data)
         self._current_tab = tab
 
-        # Inject stealth script if enabled
-        if self._stealth:
-            try:
-                # Wait for stealth injection to complete before navigating
-                result = self._run_async(self._inject_stealth_script(tab))
-                if hasattr(result, "result"):
-                    result.result()
-            except RuntimeError:
-                # Event loop not running, skip injection
-                pass
-
-        # Inject WebRTC spoofing if enabled
-        if self._webrtc_spoof:
-            try:
-                result = self._run_async(self._inject_webrtc_spoof_script(tab))
-                if hasattr(result, "result"):
-                    result.result()
-            except RuntimeError:
-                pass
-
-        # Inject media device spoofing if enabled
-        if self._media_spoof:
-            try:
-                result = self._run_async(self._inject_media_spoof_script(tab))
-                if hasattr(result, "result"):
-                    result.result()
-            except RuntimeError:
-                pass
-
-        # Inject WebGL spoofing if enabled
-        if self._webgl_spoof:
-            try:
-                result = self._run_async(self._inject_webgl_spoof_script(tab))
-                if hasattr(result, "result"):
-                    result.result()
-            except RuntimeError:
-                pass
-
-        # Inject font spoofing if enabled
-        if self._font_spoof:
-            try:
-                result = self._run_async(self._inject_font_spoof_script(tab))
-                if hasattr(result, "result"):
-                    result.result()
-            except RuntimeError:
-                pass
-
         # Set up tracker blocklist if enabled
         if self._block_trackers:
             try:
@@ -1519,6 +1637,20 @@ class Browser:
                 pass
             except Exception as e:
                 logger.warning("Tracker blocklist setup failed: %s", e)
+
+        # Inject spoofing scripts BEFORE navigation (if any spoofing enabled)
+        if any([self._stealth, self._webrtc_spoof, self._media_spoof, 
+                self._webgl_spoof, self._font_spoof]):
+            try:
+                # Wait for spoofing injection to complete
+                result = self._run_async(self._inject_spoofing_scripts_for_tab(tab))
+                if hasattr(result, "result"):
+                    result.result(timeout=10.0)
+            except RuntimeError:
+                # Event loop not running - scripts will be injected later
+                pass
+            except Exception as e:
+                logger.warning(f"Failed to inject spoofing scripts: {e}")
 
         # Navigate if URL provided (not about:blank)
         if url and url != "about:blank":
