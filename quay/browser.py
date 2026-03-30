@@ -1143,37 +1143,101 @@ class Browser:
                 return open(script_path).read()
             raise FileNotFoundError(f"Script not found: {filename}")
 
-    def _inject_webrtc_spoof_script(self, cdp: Any) -> None:
+    async def _inject_webrtc_spoof_script(self, tab: Tab) -> bool:
         """Inject WebRTC spoofing script before navigation."""
         if not self._webrtc_spoof_script:
             self._webrtc_spoof_script = self._load_script("webrtc_spoof.js")
-        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
-            "source": self._webrtc_spoof_script,
-        })
+        
+        try:
+            # Get connection for this tab
+            conn = await self._get_connection(tab)
+            
+            # Inject script on page lifecycle init (before any JS runs)
+            result = await conn.send(
+                "Page.addScriptToEvaluateOnNewDocument",
+                params={"source": self._webrtc_spoof_script},
+            )
+            
+            if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument"):
+                logger.warning("WebRTC spoof script injection failed: %s", error.message)
+                return False
+            
+            return True
+        except Exception as e:
+            logger.warning("WebRTC spoof script injection error: %s", e)
+            return False
 
-    def _inject_media_spoof_script(self, cdp: Any) -> None:
+    async def _inject_media_spoof_script(self, tab: Tab) -> bool:
         """Inject media device spoofing script before navigation."""
         if not self._media_spoof_script:
             self._media_spoof_script = self._load_script("media_spoof.js")
-        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
-            "source": self._media_spoof_script,
-        })
+        
+        try:
+            # Get connection for this tab
+            conn = await self._get_connection(tab)
+            
+            # Inject script on page lifecycle init (before any JS runs)
+            result = await conn.send(
+                "Page.addScriptToEvaluateOnNewDocument",
+                params={"source": self._media_spoof_script},
+            )
+            
+            if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument"):
+                logger.warning("Media spoof script injection failed: %s", error.message)
+                return False
+            
+            return True
+        except Exception as e:
+            logger.warning("Media spoof script injection error: %s", e)
+            return False
 
-    def _inject_webgl_spoof_script(self, cdp: Any) -> None:
+    async def _inject_webgl_spoof_script(self, tab: Tab) -> bool:
         """Inject WebGL spoofing script before navigation."""
         if not self._webgl_spoof_script:
             self._webgl_spoof_script = self._load_script("webgl_spoof.js")
-        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
-            "source": self._webgl_spoof_script,
-        })
+        
+        try:
+            # Get connection for this tab
+            conn = await self._get_connection(tab)
+            
+            # Inject script on page lifecycle init (before any JS runs)
+            result = await conn.send(
+                "Page.addScriptToEvaluateOnNewDocument",
+                params={"source": self._webgl_spoof_script},
+            )
+            
+            if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument"):
+                logger.warning("WebGL spoof script injection failed: %s", error.message)
+                return False
+            
+            return True
+        except Exception as e:
+            logger.warning("WebGL spoof script injection error: %s", e)
+            return False
 
-    def _inject_font_spoof_script(self, cdp: Any) -> None:
+    async def _inject_font_spoof_script(self, tab: Tab) -> bool:
         """Inject font detection spoofing script before navigation."""
         if not self._font_spoof_script:
             self._font_spoof_script = self._load_script("font_spoof.js")
-        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
-            "source": self._font_spoof_script,
-        })
+        
+        try:
+            # Get connection for this tab
+            conn = await self._get_connection(tab)
+            
+            # Inject script on page lifecycle init (before any JS runs)
+            result = await conn.send(
+                "Page.addScriptToEvaluateOnNewDocument",
+                params={"source": self._font_spoof_script},
+            )
+            
+            if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument"):
+                logger.warning("Font spoof script injection failed: %s", error.message)
+                return False
+            
+            return True
+        except Exception as e:
+            logger.warning("Font spoof script injection error: %s", e)
+            return False
 
 
     def _resolve_tab(self, tab: Tab | str | None) -> Tab | None:
