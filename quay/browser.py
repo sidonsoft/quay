@@ -1136,7 +1136,9 @@ class Browser:
         if self._stealth:
             try:
                 # Wait for stealth injection to complete before navigating
-                self._run_async(self._inject_stealth_script(tab)).result(timeout=5.0)
+                result = self._run_async(self._inject_stealth_script(tab))
+                if hasattr(result, "result"):
+                    result.result(timeout=5.0)
             except RuntimeError:
                 # Event loop not running, skip injection
                 pass
@@ -1147,7 +1149,9 @@ class Browser:
         if self._block_trackers:
             try:
                 # Wait for blocklist setup to complete
-                self._run_async(self._setup_tracker_blocklist(tab)).result(timeout=5.0)
+                result = self._run_async(self._setup_tracker_blocklist(tab))
+                if hasattr(result, "result"):
+                    result.result(timeout=5.0)
             except RuntimeError:
                 # Event loop not running, skip blocklist setup
                 pass
@@ -3261,9 +3265,12 @@ class Browser:
         async def _get() -> dict | None:
             conn = await self._get_connection(tab)
             # Get current metrics
-            result = await self._send_cdp(
-                conn, "Emulation.getDeviceMetricsOverride", domains=["Emulation"]
-            )
+            try:
+                result = await self._send_cdp(
+                    conn, "Emulation.getDeviceMetricsOverride", domains=["Emulation"]
+                )
+            except Exception:
+                return None
             metrics = result.get("metrics", {})
             if not metrics:
                 return None
