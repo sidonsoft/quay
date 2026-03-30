@@ -40,5 +40,6 @@ tests/test_navigation.py
 tests/test_persistent_profile.py
 tests/test_quay.py
 tests/test_recording.py
+tests/test_stealth_enhanced.py
 tests/test_stealth_timing.py
 tests/test_wait.py
