@@ -1076,8 +1076,10 @@ class Browser:
         # Register cleanup on program exit
         atexit.register(self._cleanup)
 
-        # Note: Spoofing scripts are injected per-tab in new_tab() before navigation
-        # This ensures scripts execute before page JavaScript loads
+        # Inject spoofing scripts at browser level - these apply to ALL future tabs
+        # Scripts are injected using Page.addScriptToEvaluateOnNewDocument before
+        # any tab navigation, ensuring execution before page JavaScript loads
+        self._inject_spoofing_scripts()
 
     def _inject_spoofing_scripts(self) -> None:
         """
@@ -1113,6 +1115,17 @@ class Browser:
             
             # Get connection for the tab
             conn = await self._get_connection(temp_tab)
+
+            # Inject stealth script (if enabled)
+            if self._stealth:
+                if self._stealth_script is None:
+                    self._stealth_script = self._load_script('stealth.js')
+                result = await conn.send(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    params={"source": self._stealth_script}
+                )
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (Stealth)"):
+                    logger.warning(f"Stealth script injection failed: {error.message}")
 
             # Inject WebRTC spoofing script
             if self._webrtc_spoof:
@@ -1637,20 +1650,6 @@ class Browser:
                 pass
             except Exception as e:
                 logger.warning("Tracker blocklist setup failed: %s", e)
-
-        # Inject spoofing scripts BEFORE navigation (if any spoofing enabled)
-        if any([self._stealth, self._webrtc_spoof, self._media_spoof, 
-                self._webgl_spoof, self._font_spoof]):
-            try:
-                # Wait for spoofing injection to complete
-                result = self._run_async(self._inject_spoofing_scripts_for_tab(tab))
-                if hasattr(result, "result"):
-                    result.result(timeout=10.0)
-            except RuntimeError:
-                # Event loop not running - scripts will be injected later
-                pass
-            except Exception as e:
-                logger.warning(f"Failed to inject spoofing scripts: {e}")
 
         # Navigate if URL provided (not about:blank)
         if url and url != "about:blank":
