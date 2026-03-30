@@ -79,6 +79,71 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 9222
 DEFAULT_TIMEOUT = 10.0
 
+# Device descriptors for mobile emulation
+# Based on Chrome DevTools device descriptors
+_DEVICES = {
+    "iPhone 14 Pro": {
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+        "viewport": {"width": 393, "height": 852, "deviceScaleFactor": 3, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "iPhone 14": {
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+        "viewport": {"width": 390, "height": 844, "deviceScaleFactor": 3, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "iPhone SE": {
+        "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1",
+        "viewport": {"width": 320, "height": 568, "deviceScaleFactor": 2, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "iPad Pro 12.9": {
+        "userAgent": "Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+        "viewport": {"width": 1024, "height": 1366, "deviceScaleFactor": 2, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "iPad Air": {
+        "userAgent": "Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1",
+        "viewport": {"width": 820, "height": 1180, "deviceScaleFactor": 2, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "Samsung Galaxy S21": {
+        "userAgent": "Mozilla/5.0 (Linux; Android 11; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36",
+        "viewport": {"width": 360, "height": 800, "deviceScaleFactor": 3, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "Samsung Galaxy S20": {
+        "userAgent": "Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36",
+        "viewport": {"width": 360, "height": 800, "deviceScaleFactor": 3, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "Google Pixel 7": {
+        "userAgent": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Mobile Safari/537.36",
+        "viewport": {"width": 412, "height": 915, "deviceScaleFactor": 2.625, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "Google Pixel 6": {
+        "userAgent": "Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Mobile Safari/537.36",
+        "viewport": {"width": 412, "height": 915, "deviceScaleFactor": 2.625, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+    "Motorola Moto G4": {
+        "userAgent": "Mozilla/5.0 (Linux; Android 7.0; Moto G (4)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Mobile Safari/537.36",
+        "viewport": {"width": 720, "height": 1280, "deviceScaleFactor": 2, "flexible": False},
+        "touch": True,
+        "mobile": True,
+    },
+}
+
 # Stealth script to hide automation signals from pages
 _STEALTH_SCRIPT = """
 (function() {
@@ -3055,6 +3120,172 @@ class Browser:
             return self._run_async(_fill())
         finally:
             self._record_depth.reset(token)
+
+    # ─────────────────────────────────────────────────────────────────────────────
+    # Device Emulation
+    # ─────────────────────────────────────────────────────────────────────────────
+
+    def emulate_device(
+        self, device: str | dict | None = None, tab: Tab | None = None
+    ) -> None:
+        """
+        Emulate a mobile device or disable emulation.
+
+        Overrides user agent, viewport, and touch events to simulate
+        mobile devices.
+
+        Args:
+            device: Device name (e.g., "iPhone 14", "iPad Pro") or custom dict
+                   with userAgent, viewport, touch, mobile properties.
+                   Pass None to disable emulation.
+
+            tab: Tab to emulate on (defaults to current)
+
+        Example:
+            # Use built-in device
+            browser.emulate_device("iPhone 14")
+            browser.emulate_device("iPad Pro")
+            browser.emulate_device("Samsung Galaxy S21")
+
+            # Custom device
+            browser.emulate_device({
+                "userAgent": "Custom User Agent",
+                "viewport": {"width": 375, "height": 667},
+                "touch": True,
+                "mobile": True,
+            })
+
+            # Disable emulation
+            browser.emulate_device(None)
+
+        Available Devices:
+            - iPhone 14 Pro
+            - iPhone 14
+            - iPhone SE
+            - iPad Pro 12.9
+            - iPad Air
+            - Samsung Galaxy S21
+            - Samsung Galaxy S20
+            - Google Pixel 7
+            - Google Pixel 6
+            - Motorola Moto G4
+        """
+        async def _emulate() -> None:
+            conn = await self._get_connection(tab)
+
+            # Enable Emulation domain first
+            try:
+                await self._send_cdp(
+                    conn, "Emulation.enable", domains=["Emulation"]
+                )
+            except:
+                # Emulation domain not available, skip emulation
+                return
+
+            if device is None:
+                # Disable emulation
+                try:
+                    await self._send_cdp(
+                        conn, "Emulation.clearDeviceMetricsOverride", domains=["Emulation"]
+                    )
+                except:
+                    pass  # Ignore if not available
+                
+                await self._send_cdp(
+                    conn,
+                    "Emulation.setUserAgentOverride",
+                    {"userAgent": ""},
+                    domains=["Emulation"],
+                )
+                return
+
+            # Get device descriptor
+            if isinstance(device, str):
+                if device not in _DEVICES:
+                    raise ValueError(
+                        f"Unknown device: {device}. Available: {list(_DEVICES.keys())}"
+                    )
+                device_config = _DEVICES[device]
+            else:
+                device_config = device
+
+            # Set user agent
+            await self._send_cdp(
+                conn,
+                "Emulation.setUserAgentOverride",
+                {"userAgent": device_config["userAgent"]},
+                domains=["Emulation"],
+            )
+
+            # Set viewport
+            viewport = device_config.get("viewport", {})
+            await self._send_cdp(
+                conn,
+                "Emulation.setViewport",
+                {
+                    "width": viewport.get("width", 800),
+                    "height": viewport.get("height", 600),
+                    "deviceScaleFactor": viewport.get("deviceScaleFactor", 1),
+                    "scale": viewport.get("scale", 1),
+                    "mobile": device_config.get("mobile", False),
+                },
+                domains=["Emulation"],
+            )
+
+            # Enable touch
+            if device_config.get("touch", False):
+                try:
+                    await self._send_cdp(
+                        conn,
+                        "Emulation.setTouchEmulationEnabled",
+                        {"enabled": True},
+                        domains=["Emulation"],
+                    )
+                except:
+                    pass  # Ignore if not available
+
+        self._run_async(_emulate())
+
+    def get_emulated_device(self, tab: Tab | None = None) -> dict | None:
+        """
+        Get the currently emulated device configuration.
+
+        Returns:
+            Device config dict or None if not emulating
+
+        Example:
+            device = browser.get_emulated_device()
+            if device:
+                print(f"Emulating: {device}")
+        """
+        async def _get() -> dict | None:
+            conn = await self._get_connection(tab)
+            # Get current metrics
+            result = await self._send_cdp(
+                conn, "Emulation.getDeviceMetricsOverride", domains=["Emulation"]
+            )
+            metrics = result.get("metrics", {})
+            if not metrics:
+                return None
+
+            # Get user agent
+            ua_result = await self._send_cdp(
+                conn, "Emulation.getUserAgentOverride", domains=["Emulation"]
+            )
+            ua = ua_result.get("userAgent", "")
+
+            return {
+                "userAgent": ua,
+                "viewport": {
+                    "width": metrics.get("width", 0),
+                    "height": metrics.get("height", 0),
+                    "deviceScaleFactor": metrics.get("deviceScaleFactor", 1),
+                },
+                "touch": metrics.get("touchOverride", False),
+                "mobile": metrics.get("isMobile", False),
+            }
+
+        return self._run_async(_get())
 
     # ─────────────────────────────────────────────────────────────────────────────
     # Screenshots & Content
