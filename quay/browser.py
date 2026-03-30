@@ -958,6 +958,10 @@ class Browser:
         stealth_mode: str = "basic",
         block_trackers: bool = False,
         profile_path: str | None = None,
+        webrtc_spoof: bool = True,
+        media_spoof: bool = True,
+        webgl_spoof: bool = True,
+        font_spoof: bool = True,
     ):
         """
         Initialize browser connection.
@@ -1021,6 +1025,16 @@ class Browser:
         self.reconnect_max_retries = reconnect_max_retries
         self.reconnect_backoff = reconnect_backoff
         self.reconnect_callback = reconnect_callback
+        self._stealth_script = None
+        self._blocklist_script = None
+        self._webrtc_spoof_script = None
+        self._media_spoof_script = None
+        self._webgl_spoof_script = None
+        self._font_spoof_script = None
+        self._webrtc_spoof = webrtc_spoof
+        self._media_spoof = media_spoof
+        self._webgl_spoof = webgl_spoof
+        self._font_spoof = font_spoof
         self._interceptors: dict[str, list[Callable[[dict], None]]] = {}
         self._interceptor_filters: dict[str, dict] = {}
         self._accessibility_cache: dict[str, AXNode] = {}
@@ -1108,6 +1122,59 @@ class Browser:
             # Thread-safe execution
             future = asyncio.run_coroutine_threadsafe(coro, loop)
             return future.result()
+
+    def _load_script(self, filename: str) -> str:
+        """Load a spoofing script from the package data directory."""
+        import importlib.resources as resources
+        try:
+            # Try to read from package data
+            script_path = resources.files("quay") / filename
+            return script_path.read_text()
+        except Exception:
+            # Fallback to file system path
+            script_dir = os.path.join(os.path.dirname(__file__), "..")
+            script_path = os.path.join(script_dir, "quay", filename)
+            if os.path.exists(script_path):
+                return open(script_path).read()
+            # Try from downloads directory
+            download_dir = os.path.expanduser("~/.copaw/workspaces/zEaYaK/downloads")
+            script_path = os.path.join(download_dir, filename)
+            if os.path.exists(script_path):
+                return open(script_path).read()
+            raise FileNotFoundError(f"Script not found: {filename}")
+
+    def _inject_webrtc_spoof_script(self, cdp: Any) -> None:
+        """Inject WebRTC spoofing script before navigation."""
+        if not self._webrtc_spoof_script:
+            self._webrtc_spoof_script = self._load_script("webrtc_spoof.js")
+        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
+            "source": self._webrtc_spoof_script,
+        })
+
+    def _inject_media_spoof_script(self, cdp: Any) -> None:
+        """Inject media device spoofing script before navigation."""
+        if not self._media_spoof_script:
+            self._media_spoof_script = self._load_script("media_spoof.js")
+        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
+            "source": self._media_spoof_script,
+        })
+
+    def _inject_webgl_spoof_script(self, cdp: Any) -> None:
+        """Inject WebGL spoofing script before navigation."""
+        if not self._webgl_spoof_script:
+            self._webgl_spoof_script = self._load_script("webgl_spoof.js")
+        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
+            "source": self._webgl_spoof_script,
+        })
+
+    def _inject_font_spoof_script(self, cdp: Any) -> None:
+        """Inject font detection spoofing script before navigation."""
+        if not self._font_spoof_script:
+            self._font_spoof_script = self._load_script("font_spoof.js")
+        cdp.send("Page.addScriptToEvaluateOnNewDocument", {
+            "source": self._font_spoof_script,
+        })
+
 
     def _resolve_tab(self, tab: Tab | str | None) -> Tab | None:
         """Resolve Tab | str | None to Tab | None."""
@@ -1335,12 +1402,46 @@ class Browser:
                 # Wait for stealth injection to complete before navigating
                 result = self._run_async(self._inject_stealth_script(tab))
                 if hasattr(result, "result"):
-                    result.result(timeout=5.0)
+                    result.result()
             except RuntimeError:
                 # Event loop not running, skip injection
                 pass
-            except Exception as e:
-                logger.warning("Stealth script injection failed: %s", e)
+
+        # Inject WebRTC spoofing if enabled
+        if self._webrtc_spoof:
+            try:
+                result = self._run_async(self._inject_webrtc_spoof_script(tab))
+                if hasattr(result, "result"):
+                    result.result()
+            except RuntimeError:
+                pass
+
+        # Inject media device spoofing if enabled
+        if self._media_spoof:
+            try:
+                result = self._run_async(self._inject_media_spoof_script(tab))
+                if hasattr(result, "result"):
+                    result.result()
+            except RuntimeError:
+                pass
+
+        # Inject WebGL spoofing if enabled
+        if self._webgl_spoof:
+            try:
+                result = self._run_async(self._inject_webgl_spoof_script(tab))
+                if hasattr(result, "result"):
+                    result.result()
+            except RuntimeError:
+                pass
+
+        # Inject font spoofing if enabled
+        if self._font_spoof:
+            try:
+                result = self._run_async(self._inject_font_spoof_script(tab))
+                if hasattr(result, "result"):
+                    result.result()
+            except RuntimeError:
+                pass
 
         # Set up tracker blocklist if enabled
         if self._block_trackers:
