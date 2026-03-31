@@ -1685,15 +1685,15 @@ class Browser:
         Returns:
             Context manager yielding Tab
         """
-        from contextlib import suppress
-
         tab = self.new_tab(url)
         try:
             yield tab
         finally:
             if close_on_exit:
-                with suppress(Exception):
+                try:
                     self.close_tab(tab)
+                except Exception as e:
+                    logger.warning("temp_tab cleanup failed: %s", e)
 
     def switch_to_tab(self, tab: Tab | str, focus: bool = True) -> Tab | None:
         """
@@ -1861,7 +1861,6 @@ class Browser:
             not self._recording
             or self._recording.paused
             or self._playing_back
-            or self._record_depth.get() > 0
         ):
             return
 
