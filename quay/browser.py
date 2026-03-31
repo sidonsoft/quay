@@ -1216,7 +1216,7 @@ class Browser:
                     result, "Page.addScriptToEvaluateOnNewDocument (Media)"
                 ):
                     logger.warning(
-                        f"Media spoof script injection failed: {error.message}"
+                        f"Media spoof script injection failed: {str(error)}"
                     )
 
             # Inject WebGL spoofing script
@@ -1232,7 +1232,7 @@ class Browser:
                     result, "Page.addScriptToEvaluateOnNewDocument (WebGL)"
                 ):
                     logger.warning(
-                        f"WebGL spoof script injection failed: {error.message}"
+                        f"WebGL spoof script injection failed: {str(error)}"
                     )
 
             # Inject font spoofing script
@@ -1248,7 +1248,7 @@ class Browser:
                     result, "Page.addScriptToEvaluateOnNewDocument (Font)"
                 ):
                     logger.warning(
-                        f"Font spoof script injection failed: {error.message}"
+                        f"Font spoof script injection failed: {str(error)}"
                     )
 
             # Close temp tab if we created it (prevents tab leak)
@@ -1972,7 +1972,7 @@ class Browser:
             if error := parse_cdp_error(
                 result, "Page.addScriptToEvaluateOnNewDocument"
             ):
-                logger.warning("Stealth script injection failed: %s", error.message)
+                logger.warning("Stealth script injection failed: %s", str(error))
                 return False
 
             return True
@@ -2013,7 +2013,7 @@ class Browser:
             )
 
             if error := parse_cdp_error(result, "Network.setRequestInterception"):
-                logger.warning("Tracker blocklist setup failed: %s", error.message)
+                logger.warning("Tracker blocklist setup failed: %s", str(error))
                 return False
 
             # Register callback for intercepted requests
