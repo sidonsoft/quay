@@ -1091,6 +1091,7 @@ class Browser:
         self.base_url = f"http://{host}:{port}"
         self._current_tab: Tab | None = None
         self._pool: ConnectionPool | None = None
+        self._cleanup_task: asyncio.Task[Any] | None = None
         self._block_trackers = block_trackers
         self._blocked_urls: set[str] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -4710,8 +4711,8 @@ class Browser:
             try:
                 loop = self._loop
                 if loop.is_running():
-                    # Schedule cleanup to run — cannot await from sync code in a running loop
-                    asyncio.ensure_future(self._pool.close_all())
+                    # Store the task so it can be awaited before the loop exits
+                    self._cleanup_task = asyncio.ensure_future(self._pool.close_all())
                 else:
                     loop.run_until_complete(self._pool.close_all())
             except RuntimeError:
@@ -4732,6 +4733,25 @@ class Browser:
 
         if self._pool:
             await self._pool.close_all()
+
+    def await_close(self, timeout: float = 5.0) -> None:
+        """
+        Wait for background cleanup to complete after calling close().
+
+        Use this when close() was called while the event loop was still running
+        and you want to ensure all connections/tasks are cleanly shut down
+        before exiting.
+
+        Args:
+            timeout: Maximum seconds to wait. Raises asyncio.TimeoutError if
+                     cleanup does not complete in time.
+        """
+        if self._cleanup_task and self._loop and self._loop.is_running():
+            try:
+                asyncio.wait_for(self._cleanup_task, timeout=timeout)
+            except (asyncio.TimeoutError, asyncio.CancelledError):
+                pass
+            self._cleanup_task = None
 
     async def __aenter__(self) -> Browser:
         """Async context manager entry."""
