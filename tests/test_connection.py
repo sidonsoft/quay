@@ -1,4 +1,5 @@
 """Tests for quay.connection — WebSocket connection lifecycle."""
+
 from __future__ import annotations
 
 import asyncio

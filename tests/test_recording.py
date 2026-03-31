@@ -1,4 +1,5 @@
 """Tests for quay._browser_recording — session recording and playback."""
+
 from __future__ import annotations
 
 import os
@@ -67,7 +68,7 @@ class TestRecordingModel:
         """Recording should deserialize from dict."""
         json_data = {
             "version": "1.0",
-            "actions": [{"type": "type", "timestamp": 1.0, "text": "hello"}]
+            "actions": [{"type": "type", "timestamp": 1.0, "text": "hello"}],
         }
 
         rec = Recording.from_dict(json_data)
@@ -79,9 +80,13 @@ class TestRecordingModel:
         """Recording should save and load from file."""
         rec = Recording()
         rec.start_time = 0.0
-        rec.actions.append(Action(type="navigate", timestamp=0.5, params={"url": "https://example.com"}))
+        rec.actions.append(
+            Action(
+                type="navigate", timestamp=0.5, params={"url": "https://example.com"}
+            )
+        )
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             filename = f.name
 
         try:

@@ -1,4 +1,5 @@
 """Shared pytest fixtures for quay tests."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock
@@ -13,10 +14,24 @@ from quay.models import Tab
 def mock_browser():
     """Create a mock Browser with common methods configured."""
     browser = MagicMock()
-    browser.list_tabs = MagicMock(return_value=[
-        Tab(id="TAB1", url="https://example.com", title="Example", type="page", web_socket_debugger_url="ws://localhost:9222/devtools/page/TAB1"),
-        Tab(id="TAB2", url="https://google.com", title="Google", type="page", web_socket_debugger_url="ws://localhost:9222/devtools/page/TAB2"),
-    ])
+    browser.list_tabs = MagicMock(
+        return_value=[
+            Tab(
+                id="TAB1",
+                url="https://example.com",
+                title="Example",
+                type="page",
+                web_socket_debugger_url="ws://localhost:9222/devtools/page/TAB1",
+            ),
+            Tab(
+                id="TAB2",
+                url="https://google.com",
+                title="Google",
+                type="page",
+                web_socket_debugger_url="ws://localhost:9222/devtools/page/TAB2",
+            ),
+        ]
+    )
     browser.current_tab = None
     browser.connect = MagicMock()
     browser.close = MagicMock()

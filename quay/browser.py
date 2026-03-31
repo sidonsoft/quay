@@ -1140,7 +1140,7 @@ class Browser:
             # Create an async task to inject scripts
             result = self._run_async(self._inject_spoofing_scripts_async())
             # If result is a Task, get the actual result
-            if hasattr(result, 'result'):
+            if hasattr(result, "result"):
                 result = result.result()
             if not result:
                 logger.warning("Failed to inject spoofing scripts at browser init")

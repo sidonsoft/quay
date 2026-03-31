@@ -1,4 +1,5 @@
 """Test cookie import/export functionality - basic verification."""
+
 import asyncio
 import json
 import os
@@ -15,8 +16,8 @@ async def test_export_import_methods_exist():
     browser = Browser.launch(headless=True)
 
     # Verify methods exist
-    assert hasattr(browser, 'export_cookies'), "export_cookies method should exist"
-    assert hasattr(browser, 'import_cookies'), "import_cookies method should exist"
+    assert hasattr(browser, "export_cookies"), "export_cookies method should exist"
+    assert hasattr(browser, "import_cookies"), "import_cookies method should exist"
 
     await browser.aclose()
 

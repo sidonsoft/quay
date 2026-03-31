@@ -117,7 +117,9 @@ class Connection:
         self._thread_lock = threading.Lock()
         self._message_id = 0
         self._pending: dict[int, asyncio.Future[Any]] = {}
-        self._pending_timestamps: dict[int, float] = {}  # Track when messages were added
+        self._pending_timestamps: dict[
+            int, float
+        ] = {}  # Track when messages were added
         self._receive_task: asyncio.Task[None] | None = None
         self._connected = False
         self._state = ConnectionState.DISCONNECTED
@@ -471,8 +473,8 @@ class Connection:
                 pass
 
     _STALE_AGE_SECONDS = 30.0  # Futures pending longer than this are stale
-    _CLEANUP_INTERVAL = 50     # Run cleanup every N messages in receive loop
-    _receive_msg_count = 0     # New counter
+    _CLEANUP_INTERVAL = 50  # Run cleanup every N messages in receive loop
+    _receive_msg_count = 0  # New counter
 
     def _cleanup_stale_messages(self) -> None:
         """Remove stale pending messages by age, not just count.
@@ -496,10 +498,12 @@ class Connection:
                 fut = self._pending.pop(msg_id, None)
                 self._pending_timestamps.pop(msg_id, None)
                 if fut and not fut.done():
-                    fut.set_exception(TimeoutError(
-                        f"Stale message (age > {self._STALE_AGE_SECONDS}s)",
-                        timeout=self._STALE_AGE_SECONDS
-                    ))
+                    fut.set_exception(
+                        TimeoutError(
+                            f"Stale message (age > {self._STALE_AGE_SECONDS}s)",
+                            timeout=self._STALE_AGE_SECONDS,
+                        )
+                    )
             except KeyError:
                 pass
 
@@ -627,7 +631,9 @@ class ConnectionPool:
             await conn.disconnect()
             logger.debug("Evicted connection for tab %s", oldest_id)
         except Exception as e:
-            logger.debug("Error closing evicted connection for tab %s: %s", oldest_id, e)
+            logger.debug(
+                "Error closing evicted connection for tab %s: %s", oldest_id, e
+            )
 
     async def get_existing(self, tab_id: str) -> Connection | None:
         """

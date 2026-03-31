@@ -1,4 +1,5 @@
 """Test stealth script injection timing fix."""
+
 import asyncio
 
 import pytest
@@ -24,9 +25,7 @@ async def test_stealth_timing():
         await asyncio.sleep(3)
 
         # Check stealth signals - simpler approach
-        result = await browser.evaluate(
-            "navigator.webdriver", tab=tab
-        )
+        result = await browser.evaluate("navigator.webdriver", tab=tab)
 
         print(f"navigator.webdriver: {result}")
 
@@ -42,9 +41,7 @@ async def test_stealth_timing():
 
         await asyncio.sleep(3)
 
-        result2 = await browser.evaluate(
-            "navigator.webdriver", tab=tab2
-        )
+        result2 = await browser.evaluate("navigator.webdriver", tab=tab2)
 
         print(f"navigator.webdriver: {result2}")
 

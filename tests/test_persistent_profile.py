@@ -1,4 +1,5 @@
 """Test persistent profile functionality."""
+
 import asyncio
 import os
 import tempfile

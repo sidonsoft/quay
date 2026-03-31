@@ -1,4 +1,5 @@
 """Test enhanced stealth mode (Week 4)."""
+
 import asyncio
 
 import pytest

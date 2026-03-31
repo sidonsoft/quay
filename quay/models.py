@@ -134,7 +134,9 @@ class AXNode:
                 results.append(self)
 
         for child in self.children:
-            results.extend(child.find_by_name(text, exact=exact, interactive_only=interactive_only))
+            results.extend(
+                child.find_by_name(text, exact=exact, interactive_only=interactive_only)
+            )
         return results
 
     def find_interactive(self) -> list[AXNode]:
