@@ -55,6 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **get_running_loop in callback**: Network interceptors use stored `self._loop` instead of `asyncio.get_running_loop()` which raises in callback threads
 - **OperationQueue threading.Lock**: Replaced with `asyncio.Lock` for async-compatible locking; tests updated to `async def`
 - **Subprocess PIPE deadlock**: Chrome subprocess `stdout/stderr/stdin` redirected to `DEVNULL` instead of `PIPE`
+- **Recording fidelity**: removed `_record_depth.get() > 0` guard from `_record_action` — `_playing_back` already prevents re-recording; the guard was causing sub-actions to be recorded when async operations outlived the depth counter
+- **temp_tab error logging**: replaced silent `suppress(Exception)` with `try/except` + `logger.warning` for cleanup failures
 - **Double-click dispatch sequence**: Chrome `Input.dispatchMouseEvent` now sends two complete press/release cycles (clickCount=1 then 2) instead of incorrectly sending clickCount=2 on both events
 
 ## [0.2.5] - 2026-03-29
