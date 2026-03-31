@@ -1164,7 +1164,7 @@ class Browser:
             created_temp_tab = False
             if not tabs:
                 # Create a temporary about:blank tab just for injection
-                temp_tab = await self.new_tab("about:blank")
+                temp_tab = self.new_tab("about:blank")
                 created_temp_tab = True
             else:
                 temp_tab = tabs[0]
@@ -1187,7 +1187,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (Stealth)"
                 ):
-                    logger.warning(f"Stealth script injection failed: {error.message}")
+                    logger.warning(f"Stealth script injection failed: {error}")
 
             # Inject WebRTC spoofing script
             if self._webrtc_spoof:
@@ -1202,7 +1202,7 @@ class Browser:
                     result, "Page.addScriptToEvaluateOnNewDocument (WebRTC)"
                 ):
                     logger.warning(
-                        f"WebRTC spoof script injection failed: {error.message}"
+                        f"WebRTC spoof script injection failed: {error}"
                     )
 
             # Inject media spoofing script
