@@ -1415,7 +1415,6 @@ class Browser:
         except Exception as e:
             logger.warning(f"Failed to execute spoofing scripts for tab {tab.id}: {e}")
             return False
-            return False
 
     def _inject_spoofing_scripts_for_tab(self, tab: Tab) -> None:
         """Sync wrapper for async spoofing script injection."""
