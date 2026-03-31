@@ -2986,35 +2986,61 @@ class Browser:
                                 ) / 4
 
                                 # Perform native-like click via Input
-                                # A double click requires two sets of press/release
-                                # with clickCount=2, but usually one clickCount=1
-                                # followed by one clickCount=2 sequence works best.
-                                click_count = 2 if double else 1
-
-                                await self._send_cdp(
-                                    conn,
-                                    "Input.dispatchMouseEvent",
-                                    {
-                                        "type": "mousePressed",
-                                        "x": x,
-                                        "y": y,
-                                        "button": button,
-                                        "clickCount": click_count,
-                                    },
-                                    domains=["Input"],
-                                )
-                                await self._send_cdp(
-                                    conn,
-                                    "Input.dispatchMouseEvent",
-                                    {
-                                        "type": "mouseReleased",
-                                        "x": x,
-                                        "y": y,
-                                        "button": button,
-                                        "clickCount": click_count,
-                                    },
-                                    domains=["Input"],
-                                )
+                                # A double click requires two complete press/release cycles:
+                                # first with clickCount=1, second with clickCount=2.
+                                # Sending clickCount=2 on the first press fires dblclick
+                                # immediately instead of waiting for the second click.
+                                if double:
+                                    for click_count in (1, 2):
+                                        await self._send_cdp(
+                                            conn,
+                                            "Input.dispatchMouseEvent",
+                                            {
+                                                "type": "mousePressed",
+                                                "x": x,
+                                                "y": y,
+                                                "button": button,
+                                                "clickCount": click_count,
+                                            },
+                                            domains=["Input"],
+                                        )
+                                        await self._send_cdp(
+                                            conn,
+                                            "Input.dispatchMouseEvent",
+                                            {
+                                                "type": "mouseReleased",
+                                                "x": x,
+                                                "y": y,
+                                                "button": button,
+                                                "clickCount": click_count,
+                                            },
+                                            domains=["Input"],
+                                        )
+                                else:
+                                    await self._send_cdp(
+                                        conn,
+                                        "Input.dispatchMouseEvent",
+                                        {
+                                            "type": "mousePressed",
+                                            "x": x,
+                                            "y": y,
+                                            "button": button,
+                                            "clickCount": 1,
+                                        },
+                                        domains=["Input"],
+                                    )
+                                    await self._send_cdp(
+                                        conn,
+                                        "Input.dispatchMouseEvent",
+                                        {
+                                            "type": "mouseReleased",
+                                            "x": x,
+                                            "y": y,
+                                            "button": button,
+                                            "clickCount": 1,
+                                        },
+                                        domains=["Input"],
+                                    )
                                 return True
                             else:
                                 # Fallback to JS if coordinates unavailable
