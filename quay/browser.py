@@ -2057,9 +2057,22 @@ class Browser:
         Returns:
             True if request was blocked
         """
+        # Parse URL and extract hostname for proper domain matching
+        try:
+            parsed = urllib.parse.urlparse(url)
+            hostname = parsed.hostname or ""
+        except Exception:
+            hostname = ""
+
         # Check if URL matches any blocked domain
+        # Use domain boundary matching to avoid false positives like
+        # "mygoogle-analytics.com" matching "google-analytics.com"
         for domain in _BLOCKLIST:
-            if domain in url:
+            if (
+                hostname == domain
+                or hostname.endswith(f".{domain}")
+                or (hostname == "" and domain in url)  # fallback for edge cases
+            ):
                 try:
                     conn = await self._get_connection(tab)
                     # Abort the request
@@ -2289,6 +2302,11 @@ class Browser:
         """
         Wait for element or text to appear.
 
+        Note:
+            This is a **blocking synchronous call** — it sleeps the current thread
+            while polling. Use from async code only if you have no other await points
+            blocking the thread; otherwise prefer the async patterns in the library.
+
         Args:
             selector: CSS selector to wait for
             text: Text content to wait for
@@ -2395,6 +2413,10 @@ class Browser:
         """
         Wait for element to be visible (displayed and not hidden).
 
+        Note:
+            This is a **blocking synchronous call** — it sleeps the current thread
+            while polling.
+
         Args:
             selector: CSS selector
             timeout: Maximum seconds to wait
@@ -2437,6 +2459,10 @@ class Browser:
     ) -> bool:
         """
         Wait for element to be hidden or removed from DOM.
+
+        Note:
+            This is a **blocking synchronous call** — it sleeps the current thread
+            while polling.
 
         Args:
             selector: CSS selector
