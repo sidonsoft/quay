@@ -588,9 +588,9 @@ def _launch_chrome(
     try:
         _ = subprocess.Popen(
             flags,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
         )
 
         # Wait for Chrome to be ready
@@ -1254,7 +1254,7 @@ class Browser:
             if created_temp_tab:
                 self._http_put(f"/json/close/{temp_tab.id}")
                 if self._pool:
-                    await self._pool.remove(temp_tab.id)
+                    self._run_async(self._pool.remove(temp_tab.id))
 
             return True
 
@@ -2026,14 +2026,14 @@ class Browser:
                 url = params.get("request", {}).get("url", "")
                 if interception_id and url:
                     # Handle in background (don't block the event)
-                    try:
-                        loop = asyncio.get_running_loop()
-                        loop.create_task(
-                            self._handle_blocked_request(tab, interception_id, url)
-                        )
-                    except RuntimeError:
-                        # No running loop, skip
-                        pass
+                    # Use stored loop reference instead of get_running_loop() —
+                    # this callback runs in the receive loop which may not have
+                    # an "official" running loop in the asyncio sense.
+                    if self._loop is None or self._loop.is_closed():
+                        return
+                    self._loop.create_task(
+                        self._handle_blocked_request(tab, interception_id, url)
+                    )
 
             conn.on_event("Network.requestIntercepted", on_intercepted_request)
 
@@ -4686,10 +4686,7 @@ class Browser:
                 loop = self._loop
                 if loop.is_running():
                     # Schedule cleanup to run — cannot await from sync code in a running loop
-                    # Use call_soon to ensure it runs before the loop processes more events
-                    loop.call_soon(
-                        lambda: asyncio.ensure_future(self._pool.close_all())
-                    )
+                    asyncio.ensure_future(self._pool.close_all())
                 else:
                     loop.run_until_complete(self._pool.close_all())
             except RuntimeError:
