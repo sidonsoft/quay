@@ -4224,6 +4224,24 @@ class Browser:
 
         return self._run_async(_eval())
 
+    def execute(
+        self, script: str, tab: Tab | None = None, timeout: float | None = None
+    ) -> Any:
+        """
+        Execute JavaScript and return result.
+
+        Alias for evaluate(). Users expect execute() for JS execution.
+
+        Args:
+            script: JavaScript to execute
+            tab: Tab to execute in (defaults to current)
+            timeout: Operation timeout
+
+        Returns:
+            Script result value
+        """
+        return self.evaluate(script, tab=tab, timeout=timeout)
+
     # ─────────────────────────────────────────────────────────────────────────────
     # Cookies
     # ─────────────────────────────────────────────────────────────────────────────
@@ -4786,6 +4804,34 @@ class Browser:
             print(f"Stealth mode: {mode}")
         """
         return self._stealth_mode
+
+    def set_stealth_mode(self, mode: str, tab: Tab | None = None) -> None:
+        """
+        Change stealth mode at runtime.
+
+        Note: The new mode takes effect on the *next* navigation (new page load).
+        It does not retroactively re-apply to the currently loaded page.
+        To apply stealth to the current page, navigate to about:blank first
+        or open a new tab.
+
+        Args:
+            mode: Stealth level — "basic", "balanced", or "aggressive"
+            tab: Tab to inject into (default: current tab, applies on next load)
+
+        Raises:
+            ValueError: If mode is not a valid stealth level
+        """
+        valid = {"basic", "balanced", "aggressive"}
+        if mode not in valid:
+            raise ValueError(
+                f"Invalid stealth mode: {mode!r}. "
+                f"Valid options: {', '.join(sorted(valid))}"
+            )
+
+        self._stealth_mode = mode
+        self._stealth = True
+        # Clear cached script so next injection uses the new mode
+        self._stealth_script = None
 
     def is_stealth(self, tab: Tab | None = None) -> dict[str, Any]:
         """

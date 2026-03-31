@@ -91,6 +91,7 @@ google-chrome --remote-debugging-port=9222 &
 
 - [Installation Guide](installation.md)
 - [Quick Start](quickstart.md)
+- [Stealth Mode](guides/stealth.md)
 - [API Reference](api/browser.md)
 - [Changelog](changelog.md)
 - [Roadmap](roadmap.md)
