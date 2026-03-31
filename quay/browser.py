@@ -1164,7 +1164,7 @@ class Browser:
             created_temp_tab = False
             if not tabs:
                 # Create a temporary about:blank tab just for injection
-                temp_tab = await self.new_tab("about:blank")
+                temp_tab = self.new_tab("about:blank")
                 created_temp_tab = True
             else:
                 temp_tab = tabs[0]
@@ -1187,7 +1187,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (Stealth)"
                 ):
-                    logger.warning(f"Stealth script injection failed: {error.message}")
+                    logger.warning(f"Stealth script injection failed: {error}")
 
             # Inject WebRTC spoofing script
             if self._webrtc_spoof:
@@ -1201,9 +1201,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (WebRTC)"
                 ):
-                    logger.warning(
-                        f"WebRTC spoof script injection failed: {error.message}"
-                    )
+                    logger.warning(f"WebRTC spoof script injection failed: {error}")
 
             # Inject media spoofing script
             if self._media_spoof:
@@ -1217,9 +1215,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (Media)"
                 ):
-                    logger.warning(
-                        f"Media spoof script injection failed: {error.message}"
-                    )
+                    logger.warning(f"Media spoof script injection failed: {str(error)}")
 
             # Inject WebGL spoofing script
             if self._webgl_spoof:
@@ -1233,9 +1229,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (WebGL)"
                 ):
-                    logger.warning(
-                        f"WebGL spoof script injection failed: {error.message}"
-                    )
+                    logger.warning(f"WebGL spoof script injection failed: {str(error)}")
 
             # Inject font spoofing script
             if self._font_spoof:
@@ -1249,9 +1243,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (Font)"
                 ):
-                    logger.warning(
-                        f"Font spoof script injection failed: {error.message}"
-                    )
+                    logger.warning(f"Font spoof script injection failed: {str(error)}")
 
             # Close temp tab if we created it (prevents tab leak)
             if created_temp_tab:
@@ -1974,7 +1966,7 @@ class Browser:
             if error := parse_cdp_error(
                 result, "Page.addScriptToEvaluateOnNewDocument"
             ):
-                logger.warning("Stealth script injection failed: %s", error.message)
+                logger.warning("Stealth script injection failed: %s", str(error))
                 return False
 
             return True
@@ -2015,7 +2007,7 @@ class Browser:
             )
 
             if error := parse_cdp_error(result, "Network.setRequestInterception"):
-                logger.warning("Tracker blocklist setup failed: %s", error.message)
+                logger.warning("Tracker blocklist setup failed: %s", str(error))
                 return False
 
             # Register callback for intercepted requests
