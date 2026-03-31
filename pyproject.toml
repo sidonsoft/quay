@@ -24,7 +24,7 @@ dev = [
     "pytest-cov>=6.0",
     "pytest-timeout>=2.0",
     "ruff>=0.9.0",
-    "ty>=0.4.0",
+    "ty>=0.0.27",
 ]
 
 [project.scripts]
@@ -93,5 +93,5 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.ty]
-version = ">=0.4.0"
+version = ">=0.0.27"
 config-path = "pyproject.toml"
