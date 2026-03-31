@@ -31,6 +31,18 @@ class Tab:
             web_socket_debugger_url=data.get("webSocketDebuggerUrl", ""),
         )
 
+    def __getitem__(self, key: str) -> Any:
+        """Allow subscript access to Tab fields (e.g., tab['title'])."""
+        if key not in ("id", "url", "title", "type", "web_socket_debugger_url"):
+            raise KeyError(key)
+        return getattr(self, key)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Allow setting Tab fields via subscript (e.g., tab['title'] = 'New')."""
+        if key not in ("id", "url", "title", "type", "web_socket_debugger_url"):
+            raise KeyError(key)
+        object.__setattr__(self, key, value)
+
     def __repr__(self) -> str:
         return f"Tab(id={self.id[:12]}..., title={self.title[:20]}..., url={self.url[:30]}...)"
 
@@ -162,13 +174,22 @@ class AXNode:
             results.extend(child.find_interactive())
         return results
 
-    def to_tree_str(self, indent: int = 0, fmt: str = "text") -> str:
+    def to_tree_str(
+        self, indent: int = 0, fmt: str = "text", max_length: int | None = None
+    ) -> str:
         """
         Format as tree string like agent-browser snapshot.
 
         Args:
             indent: Indentation level
             fmt: Output format - "text" (default) or "compact"
+            max_length: Maximum string length before truncation.
+                        If set and output exceeds this limit, the string is
+                        truncated and a truncation notice is appended.
+                        Default None (no limit).
+
+        Returns:
+            Formatted tree string, optionally truncated.
 
         Example:
             - RootWebArea "Page Title" [ref=1] /url: https://example.com/
@@ -207,7 +228,40 @@ class AXNode:
         for child in self.children:
             lines.append(child.to_tree_str(indent + 1, fmt=fmt))
 
-        return "\n".join(lines)
+        full = "\n".join(lines)
+
+        if max_length is not None and len(full) > max_length:
+            return full[:max_length] + (
+                f"\n... [TRUNCATED: {len(full) - max_length} characters missing — "
+                "call tree_info() for size or pass a larger max_length]"
+            )
+        return full
+
+    def tree_info(self) -> dict[str, int]:
+        """
+        Return metadata about this accessibility tree.
+
+        Returns:
+            Dictionary with 'total_length' (string representation length),
+            'node_count' (total nodes in tree), and 'max_depth'.
+        """
+        tree_str = self.to_tree_str()
+        node_count = 0
+        max_depth = 0
+
+        def walk(node: AXNode, depth: int) -> None:
+            nonlocal node_count, max_depth
+            node_count += 1
+            max_depth = max(max_depth, depth)
+            for child in node.children:
+                walk(child, depth + 1)
+
+        walk(self, 0)
+        return {
+            "total_length": len(tree_str),
+            "node_count": node_count,
+            "max_depth": max_depth,
+        }
 
     def to_dict(self) -> dict:
         """Convert node to dictionary."""
