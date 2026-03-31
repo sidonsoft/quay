@@ -41,10 +41,14 @@ jobs:
 
       - name: Run tests
         run: timeout 120 pytest tests/ -v --tb=short
+        env:
+          QUAY_SKIP_CHROME: "1"
 
       - name: Coverage
         if: matrix.python-version == '3.11'
         run: pytest tests/ --cov=quay --cov-report=xml --cov-report=html
+        env:
+          QUAY_SKIP_CHROME: "1"
 
       - name: Upload coverage
         if: matrix.python-version == '3.11'

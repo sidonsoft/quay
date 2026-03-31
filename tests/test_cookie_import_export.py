@@ -10,6 +10,10 @@ import pytest
 from quay import Browser
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_export_import_methods_exist():
     """Test that export_cookies and import_cookies methods exist."""
@@ -22,6 +26,10 @@ async def test_export_import_methods_exist():
     await browser.aclose()
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_export_import_basic():
     """Test that export_cookies and import_cookies can be called."""

@@ -1,12 +1,17 @@
 """Test mobile emulation functionality - basic verification."""
 
 import asyncio
+import os
 
 import pytest
 
 from quay import Browser
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_emulate_device_methods_exist():
     """Test that emulate_device and get_emulated_device methods exist."""
@@ -31,6 +36,10 @@ async def test_emulate_iphone_14_exists():
     assert "viewport" in _DEVICES["iPhone 14"], "iPhone 14 should have viewport"
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_emulate_device_callable():
     """Test that emulate_device can be called without error."""

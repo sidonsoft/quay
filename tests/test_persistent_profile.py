@@ -9,6 +9,10 @@ import pytest
 from quay import Browser
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_persistent_profile_basic():
     """Test that profile_path parameter is accepted and stored."""
@@ -18,6 +22,10 @@ async def test_persistent_profile_basic():
         await browser.aclose()
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_persistent_profile_launch():
     """Test that Browser.launch() accepts profile_path parameter."""
@@ -30,6 +38,10 @@ async def test_persistent_profile_launch():
         await browser.aclose()
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_persistent_profile_persistence():
     """Test that profile_path parameter is passed correctly."""
