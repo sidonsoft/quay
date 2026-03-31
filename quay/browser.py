@@ -1858,11 +1858,7 @@ class Browser:
 
     def _record_action(self, action_type: str, **params) -> None:
         """Record an action with current timestamp."""
-        if (
-            not self._recording
-            or self._recording.paused
-            or self._playing_back
-        ):
+        if not self._recording or self._recording.paused or self._playing_back:
             return
 
         if self._recording.start_time is None:

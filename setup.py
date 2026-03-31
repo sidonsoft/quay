@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Install-time Python version check before delegating to setuptools."""
+
 import sys
 
 from setuptools import setup
