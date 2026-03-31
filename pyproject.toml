@@ -94,4 +94,3 @@ line-ending = "auto"
 
 [tool.ty]
 version = ">=0.0.27"
-config-path = "pyproject.toml"
