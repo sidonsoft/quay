@@ -26,6 +26,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **HIGH: click_by_text(0,0) fallback removed** — When an AXNode has no bounding box (e.g., `<title>`, `<meta>`), the code silently clicked at viewport origin (0,0), causing unpredictable behavior. Now raises `BrowserError` with helpful message.
 - **Issue #6: Exception swallowing without logging** — All `except Exception: pass` blocks now log at DEBUG level for observability. WebSocket close errors, message parsing errors, callback errors, and health check failures are now logged.
 
+## [0.2.8] - 2026-03-31
+
+### Changed
+
+- **Architecture**: Removed dead mixin stub files (`_browser_core.py`, `_browser_tabs.py`, `_browser_navigation.py`, `_browser_cdp.py`, `_browser_wait.py`, `_browser_actions.py`, `_browser_accessibility.py`, `_browser_recording.py`) — these were an incomplete architectural experiment never wired into `Browser`. `browser.py` is now explicitly monolithic.
+
+### Fixed
+
+- **Spoofing tab leak**: `_inject_spoofing_scripts_async` now closes the `about:blank` temp tab it creates for browser-level injection, preventing tab accumulation over time.
+- **Duplicate spoofing execution**: Removed redundant per-tab script injection from `new_tab()` — scripts are already registered globally via `Page.addScriptToEvaluateOnNewDocument` at browser init.
+- **Dead code**: Deleted 4 unused individual spoofing script injection methods (`_inject_webrtc_spoof_script`, `_inject_media_spoof_script`, `_inject_webgl_spoof_script`, `_inject_font_spoof_script`) and orphaned sync wrapper `_inject_spoofing_scripts_for_tab`.
+
 ## [Unreleased]
 
 ### Fixed

@@ -1,75 +1,8 @@
-"""Tests for quay._browser_accessibility — AXNode parsing and search."""
+"""Tests for quay.browser accessibility methods — tree building and search."""
 from __future__ import annotations
 
 
 from quay.models import AXNode
-
-
-class TestAXNodeParsing:
-    def test_parse_simple_node(self):
-        """Parsing a simple accessibility node should create AXNode."""
-        from quay._browser_accessibility import BrowserAccessibilityMixin
-        
-        mixin = BrowserAccessibilityMixin()
-        
-        cdp_nodes = [{
-            "nodeId": "42",
-            "role": {"value": "button"},
-            "name": {"value": "Click me"},
-        }]
-        
-        result = mixin._parse_ax_nodes(cdp_nodes)
-        assert result.ref == "42"
-        assert result.role == "button"
-        assert result.name == "Click me"
-
-    def test_parse_with_children(self):
-        """Parsing should recursively handle children."""
-        from quay._browser_accessibility import BrowserAccessibilityMixin
-        
-        mixin = BrowserAccessibilityMixin()
-        
-        cdp_nodes = [{
-            "nodeId": "1",
-            "role": {"value": "RootWebArea"},
-            "name": {"value": "Page"},
-            "children": [
-                {
-                    "nodeId": "2",
-                    "role": {"value": "link"},
-                    "name": {"value": "Home"},
-                },
-                {
-                    "nodeId": "3",
-                    "role": {"value": "button"},
-                    "name": {"value": "Submit"},
-                },
-            ],
-        }]
-        
-        result = mixin._parse_ax_nodes(cdp_nodes)
-        assert result.ref == "1"
-        assert len(result.children) == 2
-        assert result.children[0].name == "Home"
-        assert result.children[1].name == "Submit"
-
-    def test_parse_uses_ref_not_id(self):
-        """Parsing should set 'ref' field, not 'id' (AXNode uses ref)."""
-        from quay._browser_accessibility import BrowserAccessibilityMixin
-        
-        mixin = BrowserAccessibilityMixin()
-        
-        cdp_nodes = [{
-            "nodeId": "123",
-            "role": {"value": "textbox"},
-            "name": {"value": "Username"},
-        }]
-        
-        result = mixin._parse_ax_nodes(cdp_nodes)
-        assert hasattr(result, "ref")
-        assert result.ref == "123"
-        # Should NOT have 'id' or 'ignored' fields
-        assert not hasattr(result, "id")
 
 
 class TestAXNodeMethods:
