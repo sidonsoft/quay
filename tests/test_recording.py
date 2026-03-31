@@ -1,10 +1,11 @@
 """Tests for quay._browser_recording — session recording and playback."""
 from __future__ import annotations
 
-import tempfile
 import os
+import tempfile
 
-from quay.models import Recording, Action
+from quay.models import Action
+from quay.models import Recording
 
 
 class TestActionModel:

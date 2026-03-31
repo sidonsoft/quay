@@ -1,6 +1,8 @@
 """Test enhanced stealth mode (Week 4)."""
 import asyncio
+
 import pytest
+
 from quay import Browser
 
 
@@ -73,11 +75,9 @@ async def test_aggressive_stealth_script():
 @pytest.mark.asyncio
 async def test_stealth_script_content():
     """Test that stealth scripts contain expected techniques."""
-    from quay.browser import (
-        _STEALTH_SCRIPT_BASIC,
-        _STEALTH_SCRIPT_BALANCED,
-        _STEALTH_SCRIPT_AGGRESSIVE,
-    )
+    from quay.browser import _STEALTH_SCRIPT_AGGRESSIVE
+    from quay.browser import _STEALTH_SCRIPT_BALANCED
+    from quay.browser import _STEALTH_SCRIPT_BASIC
 
     # Basic should have essential protections
     assert "navigator.webdriver" in _STEALTH_SCRIPT_BASIC

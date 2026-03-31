@@ -1,6 +1,8 @@
 """Test mobile emulation functionality - basic verification."""
 import asyncio
+
 import pytest
+
 from quay import Browser
 
 
@@ -39,7 +41,7 @@ async def test_emulate_device_callable():
     await asyncio.sleep(0.5)
 
     # Call get_emulated_device (should not raise)
-    device = browser.get_emulated_device(tab=tab)
+    browser.get_emulated_device(tab=tab)
     await asyncio.sleep(0.5)
 
     await browser.aclose()

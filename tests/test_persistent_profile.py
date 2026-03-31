@@ -2,7 +2,9 @@
 import asyncio
 import os
 import tempfile
+
 import pytest
+
 from quay import Browser
 
 

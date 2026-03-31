@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import asyncio
 
-from quay.connection import ConnectionState, OperationQueue
+from quay.connection import ConnectionState
+from quay.connection import OperationQueue
 
 
 class TestOperationQueue:

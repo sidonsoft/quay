@@ -1,7 +1,6 @@
 """Tests for quay.browser — Browser class composition."""
 from __future__ import annotations
 
-
 from quay.browser import Browser
 
 

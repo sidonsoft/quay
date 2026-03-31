@@ -1,7 +1,9 @@
 """Shared pytest fixtures for quay tests."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
+
 import pytest
 
 from quay.models import Tab

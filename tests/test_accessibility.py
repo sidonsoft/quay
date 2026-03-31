@@ -1,7 +1,6 @@
 """Tests for quay.browser accessibility methods — tree building and search."""
 from __future__ import annotations
 
-
 from quay.models import AXNode
 
 

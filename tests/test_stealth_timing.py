@@ -1,6 +1,8 @@
 """Test stealth script injection timing fix."""
 import asyncio
+
 import pytest
+
 from quay import Browser
 
 

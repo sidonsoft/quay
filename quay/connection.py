@@ -476,7 +476,7 @@ class Connection:
 
     def _cleanup_stale_messages(self) -> None:
         """Remove stale pending messages by age, not just count.
-        
+
         Uses _STALE_AGE_SECONDS threshold to catch timed-out futures
         that accumulated due to receive loop death or other issues.
         """

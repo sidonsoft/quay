@@ -586,7 +586,7 @@ def _launch_chrome(
     logger.info("Launching Chrome: %s", " ".join(flags[:2]) + "...")
 
     try:
-        process = subprocess.Popen(
+        _ = subprocess.Popen(
             flags,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -3675,7 +3675,7 @@ class Browser:
             # Enable Emulation domain first
             try:
                 await self._send_cdp(conn, "Emulation.enable", domains=["Emulation"])
-            except:
+            except Exception:
                 # Emulation domain not available, skip emulation
                 return
 
@@ -3687,7 +3687,7 @@ class Browser:
                         "Emulation.clearDeviceMetricsOverride",
                         domains=["Emulation"],
                     )
-                except:
+                except Exception:
                     pass  # Ignore if not available
 
                 await self._send_cdp(
@@ -3740,7 +3740,7 @@ class Browser:
                         {"enabled": True},
                         domains=["Emulation"],
                     )
-                except:
+                except Exception:
                     pass  # Ignore if not available
 
         self._run_async(_emulate())
@@ -4473,7 +4473,7 @@ class Browser:
         import json
 
         async def _import() -> None:
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 cookies = json.load(f)
 
             # Validate cookies
