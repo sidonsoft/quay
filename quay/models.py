@@ -4,6 +4,7 @@ Data models for browser-hybrid.
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from dataclasses import field
@@ -44,7 +45,11 @@ class Tab:
         object.__setattr__(self, key, value)
 
     def __repr__(self) -> str:
-        return f"Tab(id={self.id[:12]}..., title={self.title[:20]}..., url={self.url[:30]}...)"
+        title_hash = hashlib.md5(self.title.encode()).hexdigest()[:6]
+        return (
+            f"Tab(id={self.id[:8]}.. title='{self.title[:25]}..' "
+            f"url={self.url[:35]}..#{title_hash})"
+        )
 
 
 @dataclass

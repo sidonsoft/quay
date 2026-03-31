@@ -39,6 +39,8 @@ class PendingOperation:
     method: str
     params: dict[str, Any] | None
     future: asyncio.Future[Any]
+    queued_at: float | None = None  # time.time() when queued — for timeout enforcement
+    timeout: float | None = None  # caller timeout — enforced during replay
 
 
 class OperationQueue:
@@ -55,11 +57,16 @@ class OperationQueue:
         return self._lock
 
     async def queue(
-        self, request_id: int, method: str, params: dict[str, Any] | None
+        self,
+        request_id: int,
+        method: str,
+        params: dict[str, Any] | None,
+        queued_at: float | None = None,
+        timeout: float | None = None,
     ) -> asyncio.Future[Any]:
         """Queue operation for later execution."""
         future: asyncio.Future[Any] = asyncio.Future()
-        op = PendingOperation(request_id, method, params, future)
+        op = PendingOperation(request_id, method, params, future, queued_at, timeout)
         async with self._get_lock():
             self._pending[request_id] = op
         return future
@@ -74,6 +81,14 @@ class OperationQueue:
     async def clear(self) -> None:
         """Clear all pending operations."""
         async with self._get_lock():
+            self._pending.clear()
+
+    async def cancel_all(self, exc: Exception) -> None:
+        """Cancel and error all pending operations with the given exception."""
+        async with self._get_lock():
+            for op in self._pending.values():
+                if not op.future.done():
+                    op.future.set_exception(exc)
             self._pending.clear()
 
 
@@ -251,8 +266,22 @@ class Connection:
                     # Replay queued operations
                     for op in await self._queue.get_all():
                         try:
+                            # Enforce original caller timeout — fail fast if expired
+                            if op.timeout is not None and op.queued_at is not None:
+                                elapsed = time.time() - op.queued_at
+                                if elapsed >= op.timeout:
+                                    if not op.future.done():
+                                        op.future.set_exception(
+                                            TimeoutError(
+                                                f"Queued operation '{op.method}' timed out after {elapsed:.1f}s total",
+                                                timeout=op.timeout,
+                                                operation=op.method,
+                                            )
+                                        )
+                                    continue
+
                             # Re-send and resolve the future
-                            res = await self.send(op.method, op.params)
+                            res = await self.send(op.method, op.params, timeout=op.timeout)
                             if not op.future.done():
                                 op.future.set_result(res)
                         except Exception as e:
@@ -268,6 +297,10 @@ class Connection:
                 await asyncio.sleep(delay)
 
         self._set_state(ConnectionState.DISCONNECTED)
+        # Operations that were queued during reconnect are now orphaned — cancel them
+        await self._queue.cancel_all(
+            ConnectionError("Reconnection failed — operation was queued during reconnect and never replayed")
+        )
         return False
 
     async def _resolve_ws_url(self) -> str | None:
@@ -336,8 +369,15 @@ class Connection:
         if self.state == ConnectionState.DISCONNECTED:
             raise ConnectionError("WebSocket not connected")
         elif self.state == ConnectionState.RECONNECTING:
-            # Queue operation for later
-            return await self._queue.queue(self._next_id(), method, params)
+            # Queue operation for later — pass timeout so caller deadline is tracked
+            timeout_val = timeout or self.timeout
+            return await self._queue.queue(
+                self._next_id(),
+                method,
+                params,
+                queued_at=time.time(),
+                timeout=timeout_val,
+            )
 
         if not self.is_connected:
             raise ConnectionError("WebSocket is in an invalid state")
