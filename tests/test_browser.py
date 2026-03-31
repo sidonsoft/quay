@@ -7,7 +7,7 @@ from quay.browser import Browser
 
 class TestBrowserComposition:
     """Test that Browser properly inherits from mixins."""
-    
+
     def test_has_tab_methods(self):
         """Browser should have tab mixin methods."""
         assert hasattr(Browser, 'list_tabs')
@@ -33,7 +33,7 @@ class TestBrowserComposition:
 
 class TestBrowserInstantiation:
     """Test Browser instantiation."""
-    
+
     def test_creates_instance_with_mock(self):
         """Browser should create an instance when Chrome is available."""
         # Skip this test as it requires Chrome running
@@ -43,7 +43,7 @@ class TestBrowserInstantiation:
 
 class TestBrowserContextManager:
     """Test Browser as context manager."""
-    
+
     def test_context_manager_protocol(self):
         """Browser should implement context manager protocol."""
         assert hasattr(Browser, '__enter__')

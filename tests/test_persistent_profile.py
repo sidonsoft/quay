@@ -35,12 +35,12 @@ async def test_persistent_profile_persistence():
         browser1 = Browser.launch(headless=True, profile_path=tmpdir)
         assert browser1._profile_path == tmpdir
         await browser1.aclose()
-        
+
         # Session 2: Reuse same profile
         browser2 = Browser.launch(headless=True, profile_path=tmpdir)
         assert browser2._profile_path == tmpdir
         await browser2.aclose()
-        
+
         # Verify directory was created
         assert os.path.exists(tmpdir), "Profile directory should be created"
 

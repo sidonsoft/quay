@@ -50,7 +50,7 @@ class TestConnectionState:
 
 class TestConnectionBasics:
     """Basic connection tests."""
-    
+
     def test_state_exists(self):
         """ConnectionState enum should exist."""
         assert ConnectionState.DISCONNECTED is not None

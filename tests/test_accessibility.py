@@ -15,10 +15,10 @@ class TestAXNodeMethods:
             AXNode(ref="5", role="checkbox", name="Remember me"),
             AXNode(ref="6", role="heading", name="Welcome"),
         ])
-        
+
         interactive = tree.find_interactive()
         roles = {n.role for n in interactive}
-        
+
         assert "link" in roles
         assert "button" in roles
         assert "textbox" in roles
@@ -31,9 +31,9 @@ class TestAXNodeMethods:
         parent = AXNode(ref="1", role="group", name="", children=[
             AXNode(ref="2", role="button", name="OK"),
         ])
-        
+
         # Set parent references
         for child in parent.children:
             child.parent = parent
-        
+
         assert parent.children[0].parent is parent
