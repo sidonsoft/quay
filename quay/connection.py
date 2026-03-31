@@ -42,32 +42,38 @@ class PendingOperation:
 
 
 class OperationQueue:
-    """Thread-safe queue for CDP operations during reconnection."""
+    """Async-safe queue for CDP operations during reconnection."""
 
     def __init__(self):
         self._pending: dict[int, PendingOperation] = {}
-        self._lock = threading.Lock()
+        self._lock: asyncio.Lock | None = None
 
-    def queue(
+    def _get_lock(self) -> asyncio.Lock:
+        """Lazily create lock — requires a running loop."""
+        if self._lock is None:
+            self._lock = asyncio.Lock()
+        return self._lock
+
+    async def queue(
         self, request_id: int, method: str, params: dict[str, Any] | None
     ) -> asyncio.Future[Any]:
         """Queue operation for later execution."""
         future: asyncio.Future[Any] = asyncio.Future()
         op = PendingOperation(request_id, method, params, future)
-        with self._lock:
+        async with self._get_lock():
             self._pending[request_id] = op
         return future
 
-    def get_all(self) -> list[PendingOperation]:
+    async def get_all(self) -> list[PendingOperation]:
         """Get all pending operations and clear queue."""
-        with self._lock:
+        async with self._get_lock():
             ops = list(self._pending.values())
             self._pending.clear()
             return ops
 
-    def clear(self) -> None:
+    async def clear(self) -> None:
         """Clear all pending operations."""
-        with self._lock:
+        async with self._get_lock():
             self._pending.clear()
 
 
@@ -243,7 +249,7 @@ class Connection:
                 await self.connect()
                 if self.is_connected:
                     # Replay queued operations
-                    for op in self._queue.get_all():
+                    for op in await self._queue.get_all():
                         try:
                             # Re-send and resolve the future
                             res = await self.send(op.method, op.params)
@@ -320,9 +326,9 @@ class Connection:
             now = time.time()
             elapsed = now - self._last_send_time
             if elapsed < self._rate_limit:
-                # Reserve the slot BEFORE sleeping to prevent race condition
-                self._last_send_time = now + self._rate_limit
-                await asyncio.sleep(self._rate_limit - elapsed)
+                sleep_duration = self._rate_limit - elapsed
+                await asyncio.sleep(sleep_duration)
+                self._last_send_time = time.time()
             else:
                 self._last_send_time = now
 
@@ -498,12 +504,16 @@ class Connection:
                 fut = self._pending.pop(msg_id, None)
                 self._pending_timestamps.pop(msg_id, None)
                 if fut and not fut.done():
-                    fut.set_exception(
-                        TimeoutError(
-                            f"Stale message (age > {self._STALE_AGE_SECONDS}s)",
-                            timeout=self._STALE_AGE_SECONDS,
+                    # Attempt to cancel first — if it returns False the future
+                    # was already resolved (race between timeout and response)
+                    # and we must not set an exception on a done future.
+                    if fut.cancel():
+                        fut.set_exception(
+                            TimeoutError(
+                                f"Stale message (age > {self._STALE_AGE_SECONDS}s)",
+                                timeout=self._STALE_AGE_SECONDS,
+                            )
                         )
-                    )
             except KeyError:
                 pass
 
