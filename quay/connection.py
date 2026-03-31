@@ -281,7 +281,9 @@ class Connection:
                                     continue
 
                             # Re-send and resolve the future
-                            res = await self.send(op.method, op.params, timeout=op.timeout)
+                            res = await self.send(
+                                op.method, op.params, timeout=op.timeout
+                            )
                             if not op.future.done():
                                 op.future.set_result(res)
                         except Exception as e:
@@ -299,7 +301,9 @@ class Connection:
         self._set_state(ConnectionState.DISCONNECTED)
         # Operations that were queued during reconnect are now orphaned — cancel them
         await self._queue.cancel_all(
-            ConnectionError("Reconnection failed — operation was queued during reconnect and never replayed")
+            ConnectionError(
+                "Reconnection failed — operation was queued during reconnect and never replayed"
+            )
         )
         return False
 
