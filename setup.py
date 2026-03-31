@@ -2,7 +2,12 @@
 """Install-time Python version check before delegating to setuptools."""
 import sys
 
-if sys.version_info < (3, 10):
+from setuptools import setup
+
+# Minimum Python version required (must match requires-python in pyproject.toml)
+_MIN_PYTHON = (3, 10)
+
+if sys.version_info[:2] < _MIN_PYTHON:  # noqa: UP036
     v = sys.version_info
     print(
         f"ERROR: Python 3.10 or higher is required to install quay.\n"
@@ -17,7 +22,5 @@ if sys.version_info < (3, 10):
         f"To upgrade Python, visit: https://www.python.org/downloads/\n"
     )
     sys.exit(1)
-
-from setuptools import setup
 
 setup()
