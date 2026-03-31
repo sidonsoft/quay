@@ -6,11 +6,11 @@
 
 ---
 
-## Critical / High
+## Open Issues
 
 ### 1. Recording fidelity broken — `_record_depth` scope issue in compound async methods
 
-**File:** `browser.py` \u2192 `wait_for_load_state()`
+**File:** `browser.py` → `wait_for_load_state()`
 
 Compound async methods use this pattern:
 
@@ -32,7 +32,7 @@ The `finally` runs when `_wait()` *returns*, but `_wait()` is an async loop that
 
 ### 2. `close_tab()` leaves stale `_current_tab` reference
 
-**File:** `browser.py` \u2192 `close_tab()`
+**File:** `browser.py` → `close_tab()`
 
 ```python
 if tab_id:
@@ -51,28 +51,9 @@ if tab_id == self._current_tab?.id:
 
 ---
 
-### 3. `click(double=True)` — parameter accepted but silently ignored
+### 3. PIL imported inside `update_baseline` conditional block
 
-**Status: FIXED** (`browser.py`)
-
-**File:** `browser.py` → `click()`
-
-```python
-def click(self, ref: str, ..., double: bool = False, ...) -> bool:
-    self._record_action("click", ref=ref, ..., double=double, ...)
-    # `double` and `button` are recorded but never passed to _click_async
-    return self._click_async(ref, tab=tab, timeout=timeout)
-```
-
-`double=True` always fires a single left-click. The parameter should either work or not be recorded.
-
-**Fix applied:** `Input.dispatchMouseEvent` now sends two complete press/release cycles — first with `clickCount=1`, second with `clickCount=2` — matching Chrome's expected double-click protocol.
-
----
-
-### 4. PIL imported inside `update_baseline` conditional block
-
-**File:** `browser.py` \u2192 `assert_visual_match()`
+**File:** `browser.py` → `assert_visual_match()`
 
 ```python
 if update_baseline:
@@ -84,11 +65,9 @@ If Pillow is not installed and `update_baseline=True`, this raises `ModuleNotFou
 
 ---
 
-## Medium
+### 4. `wait_for_navigation()` ignores `tab` parameter
 
-### 5. `wait_for_navigation()` ignores `tab` parameter
-
-**File:** `browser.py` \u2192 `wait_for_navigation()`
+**File:** `browser.py` → `wait_for_navigation()`
 
 ```python
 def wait_for_navigation(self, timeout: float = 10.0, wait_until: str = "load") -> bool:
@@ -99,9 +78,9 @@ The docstring and method signature include `tab: Tab | None = None`, but it is n
 
 ---
 
-### 6. `Recording.from_dict()` silently drops `path` field
+### 5. `Recording.from_dict()` silently drops `path` field
 
-**File:** `models.py` \u2192 `Recording.from_dict()`
+**File:** `models.py` → `Recording.from_dict()`
 
 ```python
 @classmethod
@@ -118,9 +97,9 @@ The `path` field is not restored from saved recordings. If you load a recording 
 
 ---
 
-### 7. `threshold` parameter has no range validation
+### 6. `threshold` parameter has no range validation
 
-**File:** `browser.py` \u2192 `compare_screenshots()`
+**File:** `browser.py` → `compare_screenshots()`
 
 ```python
 def compare_screenshots(self, baseline: str, current: str,
@@ -136,9 +115,9 @@ if not 0.0 <= threshold <= 100.0:
 
 ---
 
-### 8. Reconnect failure loses original CDP error context
+### 7. Reconnect failure loses original CDP error context
 
-**File:** `browser.py` \u2192 `_send_cdp()`
+**File:** `browser.py` → `_send_cdp()`
 
 ```python
 success = await conn.reconnect(...)
@@ -150,11 +129,9 @@ If reconnect fails, the original CDP error (the *reason* reconnect was needed) i
 
 ---
 
-## Low / Info
+### 8. `temp_tab` context manager lets `close_tab` exceptions propagate
 
-### 9. `temp_tab` context manager lets `close_tab` exceptions propagate
-
-**File:** `browser.py` \u2192 `temp_tab()`
+**File:** `browser.py` → `temp_tab()`
 
 ```python
 @contextmanager
@@ -171,9 +148,9 @@ If `close_tab` raises (e.g., `_http_put` fails), the exception propagates out of
 
 ---
 
-### 10. `to_tree_str()` — `format` parameter shadows built-in
+### 9. `to_tree_str()` — `format` parameter shadows built-in
 
-**File:** `models.py` \u2192 `AXNode.to_tree_str()`
+**File:** `models.py` → `AXNode.to_tree_str()`
 
 ```python
 def to_tree_str(self, indent: int = 0, format: str = "text") -> str:
@@ -183,33 +160,33 @@ def to_tree_str(self, indent: int = 0, format: str = "text") -> str:
 
 ---
 
-## What's Solid
+## Resolved
 
-| Area | Assessment |
-|------|-----------|
-| JS injection (`escape_js_string`) | Still correct — comprehensive escaping (backslash, quotes, backtick, newline, CR) |
-| CDP error handling (`parse_cdp_error`) | Robust error extraction from CDP error responses |
-| Connection pool reconnection | Well-implemented with backoff, callbacks, interceptor re-registration |
-| PDF generation | `Page.printToPDF` with full parameter set, base64 encoding |
-| Screenshot comparison | NumPy pixel diff with region crop, threshold, diff image generation |
-| `type_by_name` / `_find_form_element` | Multi-strategy (name, id, placeholder, ARIA, label/for) |
-| `assert_visual_match` | Proper update_baseline + verify flow |
-| Test coverage | Good unit test coverage for all v0.4.x features (test_multitab, test_recording, test_compare, test_pdf) |
-| Optional deps | `[compare]` extra properly defined with Pillow + numpy |
+These issues were fixed in the Round 6 follow-up PR:
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 3 | `click(double=True)` silently fired single click | Fixed double-click dispatch to send two complete press/release cycles (clickCount=1 then 2) |
+| CR-1 | Rate limit race (`_last_send_time` set before sleep) | Set after `asyncio.sleep()` |
+| CR-2 | `call_soon(lambda: ensure_future(...))` dropped coroutine | Use `ensure_future()` directly |
+| CR-3 | Tab leak on spoofing injection (unawaited `pool.remove`) | Now awaited |
+| CR-4 | Stale futures not cancelled on timeout | Now cancelled before setting `TimeoutError` |
+| CR-5 | `get_running_loop()` in network interceptor callback | Use stored `self._loop` |
+| CR-6 | `OperationQueue` used `threading.Lock` in async code | Replaced with `asyncio.Lock` |
+| CR-7 | Chrome subprocess `PIPE` deadlock risk | Redirect to `DEVNULL` |
 
 ---
 
 ## Summary Table
 
-| # | Severity | Issue |
-|---|----------|-------|
-| 1 | High | Recording fidelity broken — `_record_depth` decremented before async loop completes |
-| 2 | High | `close_tab` leaves stale `_current_tab` reference |
-| 3 | High | `click(double=True)` — `double` param recorded but never used |
-| 4 | High | PIL imported inside `update_baseline` conditional block |
-| 5 | Medium | `wait_for_navigation` ignores `tab` parameter |
-| 6 | Low | `Recording.from_dict` drops `path` field |
-| 7 | Medium | `threshold` has no range validation |
-| 8 | Medium | Reconnect failure loses original error context |
-| 9 | Low | `temp_tab` context manager lets `close_tab` exceptions propagate |
-| 10 | Low | `format` parameter shadows built-in |
+| # | Severity | Issue | Status |
+|---|----------|-------|--------|
+| 1 | High | Recording fidelity broken — `_record_depth` decremented before async loop completes | Open |
+| 2 | High | `close_tab` leaves stale `_current_tab` reference | Open |
+| 3 | High | PIL imported inside `update_baseline` conditional block | Open |
+| 4 | Medium | `wait_for_navigation` ignores `tab` parameter | Open |
+| 5 | Low | `Recording.from_dict` drops `path` field | Open |
+| 6 | Medium | `threshold` has no range validation | Open |
+| 7 | Medium | Reconnect failure loses original error context | Open |
+| 8 | Low | `temp_tab` context manager lets `close_tab` exceptions propagate | Open |
+| 9 | Low | `format` parameter shadows built-in | Open |
