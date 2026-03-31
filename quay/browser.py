@@ -1201,9 +1201,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (WebRTC)"
                 ):
-                    logger.warning(
-                        f"WebRTC spoof script injection failed: {error}"
-                    )
+                    logger.warning(f"WebRTC spoof script injection failed: {error}")
 
             # Inject media spoofing script
             if self._media_spoof:
