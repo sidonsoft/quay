@@ -53,7 +53,9 @@ if tab_id == self._current_tab?.id:
 
 ### 3. `click(double=True)` — parameter accepted but silently ignored
 
-**File:** `browser.py` \u2192 `click()`
+**Status: FIXED** (`browser.py`)
+
+**File:** `browser.py` → `click()`
 
 ```python
 def click(self, ref: str, ..., double: bool = False, ...) -> bool:
@@ -62,7 +64,9 @@ def click(self, ref: str, ..., double: bool = False, ...) -> bool:
     return self._click_async(ref, tab=tab, timeout=timeout)
 ```
 
-`_click_async()` always fires a single left-click. Playback of `click(double=True)` would do a single click. The parameter should either work or not be recorded.
+`double=True` always fires a single left-click. The parameter should either work or not be recorded.
+
+**Fix applied:** `Input.dispatchMouseEvent` now sends two complete press/release cycles — first with `clickCount=1`, second with `clickCount=2` — matching Chrome's expected double-click protocol.
 
 ---
 

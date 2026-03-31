@@ -48,6 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DES-4**: CDP domain caching prevents redundant `Domain.enable` calls
 - **DES-5**: `get_existing()` now checks connection state before returning
 - **DES-6**: Recording playback uses action whitelist for security
+- **Rate limit race**: `_last_send_time` set *after* `asyncio.sleep()` instead of before, preventing concurrent coroutines from bypassing rate limiting
+- **call_soon+async bug**: `pool.close_all()` now uses `ensure_future()` directly instead of `call_soon(lambda: ensure_future(...))` which dropped the coroutine
+- **Tab leak on spoofing injection**: `pool.remove(tab_id)` now awaited in `_inject_spoofing_scripts_async`
+- **Stale futures on timeout**: `Connection._mark_disconnected()` now cancels pending futures before setting `TimeoutError`
+- **get_running_loop in callback**: Network interceptors use stored `self._loop` instead of `asyncio.get_running_loop()` which raises in callback threads
+- **OperationQueue threading.Lock**: Replaced with `asyncio.Lock` for async-compatible locking; tests updated to `async def`
+- **Subprocess PIPE deadlock**: Chrome subprocess `stdout/stderr/stdin` redirected to `DEVNULL` instead of `PIPE`
+- **Double-click dispatch sequence**: Chrome `Input.dispatchMouseEvent` now sends two complete press/release cycles (clickCount=1 then 2) instead of incorrectly sending clickCount=2 on both events
 
 ## [0.2.5] - 2026-03-29
 
