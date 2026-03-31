@@ -1215,9 +1215,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (Media)"
                 ):
-                    logger.warning(
-                        f"Media spoof script injection failed: {str(error)}"
-                    )
+                    logger.warning(f"Media spoof script injection failed: {str(error)}")
 
             # Inject WebGL spoofing script
             if self._webgl_spoof:
@@ -1231,9 +1229,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (WebGL)"
                 ):
-                    logger.warning(
-                        f"WebGL spoof script injection failed: {str(error)}"
-                    )
+                    logger.warning(f"WebGL spoof script injection failed: {str(error)}")
 
             # Inject font spoofing script
             if self._font_spoof:
@@ -1247,9 +1243,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (Font)"
                 ):
-                    logger.warning(
-                        f"Font spoof script injection failed: {str(error)}"
-                    )
+                    logger.warning(f"Font spoof script injection failed: {str(error)}")
 
             # Close temp tab if we created it (prevents tab leak)
             if created_temp_tab:
