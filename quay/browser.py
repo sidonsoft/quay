@@ -1003,9 +1003,9 @@ class Browser:
         reconnect_max_retries: int = 3,
         reconnect_backoff: float = 1.0,
         reconnect_callback: Callable[[str], None] | None = None,
-        stealth: bool = False,
+        stealth: bool = True,
         stealth_mode: str = "basic",
-        block_trackers: bool = False,
+        block_trackers: bool = True,
         profile_path: str | None = None,
         webrtc_spoof: bool = True,
         media_spoof: bool = True,
@@ -1019,17 +1019,19 @@ class Browser:
         Use Chrome with --new-window or ensure all tabs are in one window.
 
         Examples:
+            # Defaults: stealth=basic + block_trackers enabled
+            browser = Browser()
+
             # Disable auto-reconnect:
             browser = Browser(reconnect=False)
 
-            # Enable stealth mode (basic):
-            browser = Browser(stealth=True)
+            # Disable stealth mode entirely:
+            browser = Browser(stealth=False)
 
             # Enable stealth mode (aggressive):
-            browser = Browser(stealth=True, stealth_mode="aggressive")
+            browser = Browser(stealth_mode="aggressive")
 
-            # Block known tracking/bot detection domains:
-            browser = Browser(block_trackers=True)
+            # Block known tracking/bot detection domains (on by default):
 
             # Use persistent profile:
             browser = Browser(profile_path="/tmp/my-browser-profile")
@@ -1051,9 +1053,9 @@ class Browser:
             reconnect_max_retries: Maximum reconnection attempts (default: 3)
             reconnect_backoff: Base backoff time for reconnection (default: 1.0s)
             reconnect_callback: Called with status messages during reconnect
-            stealth: Enable stealth mode (hides automation signals, default: False)
+            stealth: Enable stealth mode (hides automation signals, default: True)
             stealth_mode: Stealth mode level ("basic", "balanced", "aggressive", default: "basic")
-            block_trackers: Block known tracking/bot detection domains (default: False)
+            block_trackers: Block known tracking/bot detection domains (default: True)
             profile_path: Persistent profile directory path (None = temp profile, default: None)
 
         Raises:
