@@ -1,12 +1,17 @@
 """Test enhanced stealth mode (Week 4)."""
 
 import asyncio
+import os
 
 import pytest
 
 from quay import Browser
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_stealth_mode_parameter():
     """Test that stealth_mode parameter is accepted."""
@@ -33,6 +38,10 @@ async def test_invalid_stealth_mode():
         Browser(stealth=True, stealth_mode="invalid")
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_basic_stealth_script():
     """Test that basic stealth script is injected."""
@@ -47,6 +56,10 @@ async def test_basic_stealth_script():
     await browser.aclose()
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_balanced_stealth_script():
     """Test that balanced stealth script includes canvas/audio."""
@@ -60,6 +73,10 @@ async def test_balanced_stealth_script():
     await browser.aclose()
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_aggressive_stealth_script():
     """Test that aggressive stealth script includes all techniques."""

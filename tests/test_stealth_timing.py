@@ -1,12 +1,17 @@
 """Test stealth script injection timing fix."""
 
 import asyncio
+import os
 
 import pytest
 
 from quay import Browser
 
 
+@pytest.mark.skipif(
+    os.environ.get("QUAY_SKIP_CHROME") == "1",
+    reason="requires Chrome running",
+)
 @pytest.mark.asyncio
 async def test_stealth_timing():
     """Verify stealth scripts are injected before navigation starts."""
