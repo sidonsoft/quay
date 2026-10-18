@@ -41,16 +41,20 @@ Chrome must be running with remote debugging enabled:
 
 ```bash
 # macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile"
 
 # Linux
-google-chrome --remote-debugging-port=9222
+google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile"
 
 # Windows
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%USERPROFILE%\.quay\chrome-debug-profile"
 ```
 
-Or use the included launcher:
+⚠️ **Chrome 136+**: the `--remote-debugging-port` flag is **ignored on the default profile** — you must pass a separate `--user-data-dir`. Sign in once in that debug profile and your session persists.
+
+⚠️ **Chrome 144+**: Google added a consent flow for attaching debuggers. If you attach to a normal running Chrome (without the flags above), enable remote debugging at `chrome://inspect/#remote-debugging` and approve the per-connection prompt — there is currently no way to persist that approval. Launching Chrome with the flags above skips the prompt entirely.
+
+Or use the included launcher (uses a persistent `~/.quay/chrome-debug-profile` by default):
 
 ```bash
 ./scripts/chrome-debug.sh

@@ -78,14 +78,16 @@ Chrome must be running with remote debugging enabled:
 
 ```bash
 # macOS
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 &
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile" &
 
 # Linux
-google-chrome --remote-debugging-port=9222 &
+google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile" &
 
 # Windows
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%USERPROFILE%\.quay\chrome-debug-profile"
 ```
+
+On Chrome 136+ the debug flag is ignored on the default profile (separate `--user-data-dir` required), and on Chrome 144+ attaching to an already-running Chrome requires approving a consent prompt unless Chrome was launched with the flags above. See [Installation](installation.md).
 
 ## Documentation
 

@@ -8,7 +8,7 @@ from quay import Browser
 browser = Browser()
 ```
 
-Chrome must be running with `--remote-debugging-port=9222`. See [Installation](installation.md).
+Chrome must be running with `--remote-debugging-port=9222` **and a separate `--user-data-dir`** (Chrome 136+ ignores the flag on the default profile; Chrome 144+ shows a consent prompt unless Chrome was launched with the flag). See [Installation](installation.md).
 
 ## 2. Navigate Pages
 

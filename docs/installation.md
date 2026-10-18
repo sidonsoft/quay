@@ -16,32 +16,39 @@ pip install quay
 
 Quay connects to Chrome via the Chrome DevTools Protocol. You must start Chrome with remote debugging enabled.
 
+⚠️ **Chrome 136+**: `--remote-debugging-port` is ignored when used against Chrome's **default profile**. Always pass a separate `--user-data-dir` as shown below. Sign in once in that debug profile — your session then persists there.
+
+⚠️ **Chrome 144+**: Google added a consent flow when a debugger attaches to an already-running Chrome. Two options:
+
+1. **Launch Chrome with the flags below (recommended)** — the debug port is open from startup and no prompt appears.
+2. **Attach to your normal running Chrome** — first enable remote debugging at `chrome://inspect/#remote-debugging`, then approve the permission prompt Chrome shows for *every* connection (approval cannot be persisted yet, see [chrome-devtools-mcp#825](https://github.com/ChromeDevTools/chrome-devtools-mcp/issues/825)).
+
 ### macOS
 
 ```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 &
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile" &
 ```
 
 Or create a shortcut:
 
 ```bash
 # Add to ~/.zshrc or ~/.bashrc
-alias chrome-debug='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222'
+alias chrome-debug='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile"'
 ```
 
 ### Linux
 
 ```bash
-google-chrome --remote-debugging-port=9222 &
+google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile" &
 
 # Or chromium
-chromium --remote-debugging-port=9222 &
+chromium --remote-debugging-port=9222 --user-data-dir="$HOME/.quay/chrome-debug-profile" &
 ```
 
 ### Windows
 
 ```powershell
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="%USERPROFILE%\.quay\chrome-debug-profile"
 ```
 
 ## Verify Connection
