@@ -13,7 +13,7 @@ Use your authenticated Chrome sessions with agent-browser-style element targetin
 | Tool | Your Sessions | Accessibility Tree | Performance |
 |------|---------------|---------------------|-------------|
 | agent-browser | ❌ Fresh browser | ✅ Full CDP tree + refs | Fast |
-| Playwright | ❌ Fresh browser | ⚠️ Simplified snapshot | Medium |
+| Playwright | ❌ Fresh browser | ⚠️ Simplified snapshot (aria refs via `get_by_ref`, v1.64+) | Medium |
 | Chrome DevTools | ✅ Your Chrome | ❌ Raw protocol only | Fast |
 | **Quay** | ✅ Your Chrome | ✅ Full CDP tree + refs | Fast |
 

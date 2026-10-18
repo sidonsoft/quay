@@ -11,7 +11,8 @@
 | Feature | Quay | Playwright | agent-browser | Raw CDP |
 |---------|------|------------|---------------|---------|
 | Full AX tree (raw CDP nodes) | ✅ | ❌ Simplified snapshot only | ✅ | ❌ |
-| AX ref targeting | ✅ | ❌ | ✅ | ❌ |
+| AX ref targeting | ✅ Full CDP refs | ⚠️ aria-snapshot refs, v1.64+ (`get_by_ref`) | ✅ | ❌ |
+| MCP server | ❌ (roadmap) | ✅ | ✅ | ❌ |
 | Uses your logged-in Chrome | ✅ | ❌ | ❌ | ✅ |
 | Connection pooling | ✅ | ✅ BrowserContext | ❌ | ❌ |
 | Auto-reconnect | ✅ | ❌ | ❌ | ❌ |
