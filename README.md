@@ -118,7 +118,7 @@ Example Claude Code config entry:
 }
 ```
 
-See [MCP guide](docs/guides/mcp.md) for setup details.
+See [MCP guide](docs/guides/mcp.md) for setup details — including a five-minute [Quay + OpenClaw guide](docs/guides/openclaw.md) for wiring quay into an OpenClaw agent.
 
 ## Features
 
