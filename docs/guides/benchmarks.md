@@ -13,7 +13,7 @@ pip install playwright && playwright install chromium
 pip install selenium
 ```
 
-Your Chrome instance **must** be running with `--remote-debugging-port=9222`.
+Your Chrome instance **must** be running with `--remote-debugging-port=9222` and a separate `--user-data-dir` (Chrome 136+/144+ requirements — see [Installation](../installation.md)).
 
 ## Running Benchmarks
 

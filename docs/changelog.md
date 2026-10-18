@@ -42,6 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Chrome 136+/144+ connection guidance**: `Chrome DevTools not reachable` now raises with actionable hints (separate `--user-data-dir` required since 136; `chrome://inspect/#remote-debugging` + consent prompt since 144). README, installation, quickstart, index, and benchmarks docs updated with the required flags and consent-flow explanation.
+- **scripts/chrome-debug.sh uses a persistent debug profile** (`~/.quay/chrome-debug-profile`) instead of a throwaway `mktemp -d`, so logins in the debug profile survive restarts and the 144+ consent prompt is skipped by launching with the flags.
+
 - **DES-1**: `wait_for*` methods now use async polling (`asyncio.sleep`) instead of blocking `time.sleep`
 - **DES-2**: `_evict_oldest` no longer uses fire-and-forget `asyncio.create_task`
 - **DES-3**: Age-based cleanup for stale pending futures (30s threshold)

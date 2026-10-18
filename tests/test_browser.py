@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from quay.browser import Browser
 
 
@@ -39,6 +41,34 @@ class TestBrowserInstantiation:
         # Skip this test as it requires Chrome running
         # The composition tests are sufficient
         pass
+
+
+class TestChrome144ConnectionGuidance:
+    """Connection failure message must cover Chrome 136+/144+ requirements."""
+
+    def test_unreachable_error_mentions_user_data_dir(self):
+        """Error hints that Chrome 136+ requires a separate --user-data-dir."""
+        from quay.errors import ConnectionError as QuayConnectionError
+
+        with pytest.raises(QuayConnectionError) as exc_info:
+            # Port unlikely to be open; connection refused is immediate
+            Browser(port=59322)
+
+        msg = str(exc_info.value)
+        assert "not reachable" in msg
+        assert "--user-data-dir" in msg
+        assert "136" in msg
+
+    def test_unreachable_error_mentions_inspect_consent(self):
+        """Error points at chrome://inspect consent flow for Chrome 144+."""
+        from quay.errors import ConnectionError as QuayConnectionError
+
+        with pytest.raises(QuayConnectionError) as exc_info:
+            Browser(port=59322)
+
+        msg = str(exc_info.value)
+        assert "chrome://inspect/#remote-debugging" in msg
+        assert "144" in msg
 
 
 class TestBrowserContextManager:

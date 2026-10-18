@@ -1119,7 +1119,12 @@ class Browser:
 
             if not connected:
                 raise ConnectionError(
-                    f"Chrome DevTools not reachable at {self.base_url}",
+                    f"Chrome DevTools not reachable at {self.base_url}. "
+                    "Launch Chrome with --remote-debugging-port and a separate "
+                    "--user-data-dir (Chrome 136+ ignores the flag on the default "
+                    "profile). On Chrome 144+, also enable remote debugging at "
+                    "chrome://inspect/#remote-debugging and approve the connection "
+                    "prompt. See docs/installation.md.",
                     host=host,
                     port=port,
                 )
