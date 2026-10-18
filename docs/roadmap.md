@@ -72,6 +72,7 @@ Quay development timeline.
 
 - [ ] PDF generation — **Not implemented**
 - [ ] Multi-tab coordination — **Not implemented**
+- [ ] MCP server (`quay mcp`) — expose `snapshot`/`click`/`fill`/`navigate` as MCP tools over the existing CLI verbs — **Not implemented**. Playwright MCP and agent-browser both ship MCP support today (v1.64 also added WebMCP page-tool passthrough); an MCP wrapper keeps Quay's differentiator (your logged-in Chrome + full AX tree) usable by coding agents without a browser tool layer.
 - [x] Recording/Playback — Implemented (see known bugs in changelog)
 - [x] Screenshot comparison — Basic byte comparison implemented
 
@@ -85,6 +86,7 @@ Quay development timeline.
 | ~~WebSocket reconnection~~ | ~~P1~~ | ✅ Done |
 | Documentation site | P2 | Pending |
 | Improved form detection | P2 | Pending |
+| MCP server (`quay mcp`) | P1 | *Not implemented* |
 | PDF generation | P3 | *Not implemented* |
 
 ## Effort Legend
