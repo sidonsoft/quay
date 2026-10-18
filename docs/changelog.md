@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **MCP server (`quay mcp`)**: stdio Model Context Protocol server so MCP-capable agents (Claude Code, Codex, OpenClaw, …) can drive the user's real logged-in Chrome through quay. Tools: `browser_status`, `open_tab`, `navigate`, `snapshot`, `click_text`, `click_ref`, `fill_form`, `evaluate`, `screenshot`, `close_tabs`. Optional dependency: `pip install "quay[mcp]"` (mcp SDK 2.x). `--host/--port` accepted before or after the `mcp` subcommand for config ergonomics.
+- **`docs/guides/openclaw.md`**: five-minute guide for wiring `quay mcp` into an OpenClaw agent (`openclaw mcp add` + `doctor --probe`, AGENTS.md pointer, failure table).
 
 ### Fixed
 

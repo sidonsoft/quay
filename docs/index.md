@@ -95,6 +95,7 @@ On Chrome 136+ the debug flag is ignored on the default profile (separate `--use
 - [Quick Start](quickstart.md)
 - [Stealth Mode](guides/stealth.md)
 - [MCP Server](guides/mcp.md)
+- [Quay + OpenClaw](guides/openclaw.md)
 - [API Reference](api/browser.md)
 - [Changelog](changelog.md)
 - [Roadmap](roadmap.md)
