@@ -11,10 +11,7 @@ from quay.connection import Connection, ConnectionState
 ### Constructor
 
 ```python
-conn = Connection(
-    ws_url="ws://localhost:9222/devtools/page/abc123",
-    tab_id="abc123"
-)
+conn = Connection(ws_url="ws://localhost:9222/devtools/page/abc123", tab_id="abc123")
 ```
 
 ### Methods
@@ -55,10 +52,7 @@ await conn.close()
 Reconnect after disconnect.
 
 ```python
-success = await conn.reconnect(
-    max_retries=5,
-    base_backoff=0.5
-)
+success = await conn.reconnect(max_retries=5, base_backoff=0.5)
 ```
 
 Returns: `bool`

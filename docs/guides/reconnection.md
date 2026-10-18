@@ -30,14 +30,13 @@ browser = Browser(
     reconnect_backoff=0.5,
 )
 
+
 # With callback for status updates
 def on_reconnect(message):
     print(f"Reconnection: {message}")
 
-browser = Browser(
-    reconnect=True,
-    reconnect_callback=on_reconnect
-)
+
+browser = Browser(reconnect=True, reconnect_callback=on_reconnect)
 ```
 
 ## Behavior
@@ -85,6 +84,7 @@ Exponential backoff: Wait time = base_backoff * (2 ^ attempt_number)
 ```python
 def log_reconnect(msg):
     logger.warning(f"Reconnection: {msg}")
+
 
 browser = Browser(reconnect_callback=log_reconnect)
 ```

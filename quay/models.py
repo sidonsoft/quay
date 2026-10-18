@@ -151,9 +151,7 @@ class AXNode:
                 results.append(self)
 
         for child in self.children:
-            results.extend(
-                child.find_by_name(text, exact=exact, interactive_only=interactive_only)
-            )
+            results.extend(child.find_by_name(text, exact=exact, interactive_only=interactive_only))
         return results
 
     def find_interactive(self) -> list[AXNode]:
@@ -179,9 +177,7 @@ class AXNode:
             results.extend(child.find_interactive())
         return results
 
-    def to_tree_str(
-        self, indent: int = 0, fmt: str = "text", max_length: int | None = None
-    ) -> str:
+    def to_tree_str(self, indent: int = 0, fmt: str = "text", max_length: int | None = None) -> str:
         """
         Format as tree string like agent-browser snapshot.
 
@@ -221,9 +217,7 @@ class AXNode:
         # Add value for inputs
         if self.value:
             value_preview = (
-                self.value[:50] + "..."
-                if len(str(self.value)) > 50
-                else str(self.value)
+                self.value[:50] + "..." if len(str(self.value)) > 50 else str(self.value)
             )
             attrs.append(f"/value: {value_preview}")
 

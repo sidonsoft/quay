@@ -205,9 +205,7 @@ class TestAction:
 
     def test_action_to_dict(self):
         """Action serializes to dict with params flattened."""
-        action = Action(
-            type="fill", timestamp=1000.0, params={"ref": "r1", "value": "hi"}
-        )
+        action = Action(type="fill", timestamp=1000.0, params={"ref": "r1", "value": "hi"})
         d = action.to_dict()
         assert d["type"] == "fill"
         assert d["timestamp"] == 1000.0

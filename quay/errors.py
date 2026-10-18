@@ -7,6 +7,7 @@ All exceptions include context for debugging.
 from __future__ import annotations
 
 from typing import Any
+from typing import ClassVar
 
 
 class BrowserError(Exception):
@@ -30,9 +31,7 @@ class BrowserError(Exception):
     def __str__(self) -> str:
         base = super().__str__()
         if self.context:
-            ctx_str = ", ".join(
-                f"{k}={v}" for k, v in self.context.items() if v is not None
-            )
+            ctx_str = ", ".join(f"{k}={v}" for k, v in self.context.items() if v is not None)
             if ctx_str:
                 return f"{base} [{ctx_str}]"
         return base
@@ -41,9 +40,7 @@ class BrowserError(Exception):
         """Standard repr including context."""
         base = f"{self.__class__.__name__}: {self.args[0]}"
         if self.context:
-            ctx_str = ", ".join(
-                f"{k}={v}" for k, v in self.context.items() if v is not None
-            )
+            ctx_str = ", ".join(f"{k}={v}" for k, v in self.context.items() if v is not None)
             if ctx_str:
                 return f"{base} [{ctx_str}]"
         return base
@@ -126,7 +123,7 @@ class CDPError(BrowserError):
     """
 
     # CDP error codes
-    CODES = {
+    CODES: ClassVar[dict[int, str]] = {
         -32700: "Parse error",
         -32600: "Invalid request",
         -32601: "Method not found",
@@ -154,9 +151,7 @@ class CDPError(BrowserError):
         self.params = params
 
 
-def parse_cdp_error(
-    response: dict[str, Any], method: str | None = None
-) -> CDPError | None:
+def parse_cdp_error(response: dict[str, Any], method: str | None = None) -> CDPError | None:
     """
     Parse CDP error response into CDPError.
 

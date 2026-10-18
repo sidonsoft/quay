@@ -55,9 +55,7 @@ class TestRecordingModel:
         """Recording should serialize to dict."""
         rec = Recording()
         rec.start_time = 0.0
-        rec.actions.append(
-            Action(type="click", timestamp=1.0, params={"x": 10, "y": 20})
-        )
+        rec.actions.append(Action(type="click", timestamp=1.0, params={"x": 10, "y": 20}))
 
         d = rec.to_dict()
         assert "actions" in d
@@ -81,9 +79,7 @@ class TestRecordingModel:
         rec = Recording()
         rec.start_time = 0.0
         rec.actions.append(
-            Action(
-                type="navigate", timestamp=0.5, params={"url": "https://example.com"}
-            )
+            Action(type="navigate", timestamp=0.5, params={"url": "https://example.com"})
         )
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:

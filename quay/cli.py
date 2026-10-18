@@ -236,9 +236,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # screenshot
     ss_parser = subparsers.add_parser("screenshot", help="Take screenshot")
-    ss_parser.add_argument(
-        "path", nargs="?", default="/tmp/screenshot.png", help="Path to save"
-    )
+    ss_parser.add_argument("path", nargs="?", default="/tmp/screenshot.png", help="Path to save")
 
     # html
     subparsers.add_parser("html", help="Get page HTML")

@@ -61,18 +61,18 @@ from .models import Recording
 from .models import Tab
 
 __all__ = [
-    "Browser",
-    "Tab",
     "AXNode",
-    "BrowserInfo",
     "Action",
-    "Recording",
-    "ComparisonResult",
+    "Browser",
     "BrowserError",
+    "BrowserInfo",
+    "CDPError",
+    "ComparisonResult",
     "ConnectionError",
+    "Recording",
+    "Tab",
     "TabError",
     "TimeoutError",
-    "CDPError",
 ]
 
 DEFAULT_HOST = "localhost"
@@ -952,7 +952,7 @@ class Browser:
         effective_user_data_dir = profile_path or user_data_dir
 
         # Launch Chrome
-        chrome_path, remote_url = _launch_chrome(
+        _, remote_url = _launch_chrome(
             headless=headless,
             stealth=stealth,
             block_trackers=block_trackers,
@@ -981,8 +981,7 @@ class Browser:
             browser._current_tab = tabs[0]
 
         logger.info(
-            "Browser launched via Browser.launch() - "
-            "headless=%s, stealth=%s, block_trackers=%s",
+            "Browser launched via Browser.launch() - headless=%s, stealth=%s, block_trackers=%s",
             headless,
             stealth,
             block_trackers,
@@ -1215,7 +1214,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (Media)"
                 ):
-                    logger.warning(f"Media spoof script injection failed: {str(error)}")
+                    logger.warning(f"Media spoof script injection failed: {error!s}")
 
             # Inject WebGL spoofing script
             if self._webgl_spoof:
@@ -1229,7 +1228,7 @@ class Browser:
                 if error := parse_cdp_error(
                     result, "Page.addScriptToEvaluateOnNewDocument (WebGL)"
                 ):
-                    logger.warning(f"WebGL spoof script injection failed: {str(error)}")
+                    logger.warning(f"WebGL spoof script injection failed: {error!s}")
 
             # Inject font spoofing script
             if self._font_spoof:
@@ -1240,10 +1239,8 @@ class Browser:
                     "Page.addScriptToEvaluateOnNewDocument",
                     params={"source": self._font_spoof_script},
                 )
-                if error := parse_cdp_error(
-                    result, "Page.addScriptToEvaluateOnNewDocument (Font)"
-                ):
-                    logger.warning(f"Font spoof script injection failed: {str(error)}")
+                if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument (Font)"):
+                    logger.warning(f"Font spoof script injection failed: {error!s}")
 
             # Close temp tab if we created it (prevents tab leak)
             if created_temp_tab:
@@ -1575,7 +1572,7 @@ class Browser:
             )
         except Exception as e:
             logger.error(f"Unexpected error in _http_put: {e}")
-            raise BrowserError(f"Unexpected HTTP error: {str(e)}")
+            raise BrowserError(f"Unexpected HTTP error: {e!s}")
 
     def list_tabs(self) -> list[Tab]:
         """List all open tabs."""
@@ -1759,15 +1756,11 @@ class Browser:
                 base_backoff=self.reconnect_backoff,
             )
             if not success:
-                msg = (
-                    f"Failed to reconnect to tab {conn.tab_id} for command '{method}'."
-                )
+                msg = f"Failed to reconnect to tab {conn.tab_id} for command '{method}'."
                 logger.error(msg)
                 if self.reconnect_callback:
                     self.reconnect_callback(msg)
-                raise ConnectionError(
-                    msg, original_error=conn.last_error
-                ) from conn.last_error
+                raise ConnectionError(msg, original_error=conn.last_error) from conn.last_error
 
             msg = f"Reconnected to tab {conn.tab_id} for command '{method}'."
             logger.info(msg)
@@ -1886,9 +1879,7 @@ class Browser:
         if not isinstance(recording, Recording):
             raise TypeError("Expected Recording object or JSON file path")
 
-        logger.info(
-            f"Starting playback: {len(recording.actions)} actions (speed: {speed}x)"
-        )
+        logger.info(f"Starting playback: {len(recording.actions)} actions (speed: {speed}x)")
 
         self._playing_back = True
         try:
@@ -1916,9 +1907,7 @@ class Browser:
                     logger.error(f"Playback failed for action {action.type}: {e}")
                     if verify:
                         if not isinstance(e, BrowserError):
-                            raise BrowserError(
-                                f"Playback failed at {action.type}: {e}"
-                            ) from e
+                            raise BrowserError(f"Playback failed at {action.type}: {e}") from e
                         raise e
             return True
         finally:
@@ -1963,9 +1952,7 @@ class Browser:
                 params={"source": self._stealth_script},
             )
 
-            if error := parse_cdp_error(
-                result, "Page.addScriptToEvaluateOnNewDocument"
-            ):
+            if error := parse_cdp_error(result, "Page.addScriptToEvaluateOnNewDocument"):
                 logger.warning("Stealth script injection failed: %s", str(error))
                 return False
 
@@ -2021,9 +2008,7 @@ class Browser:
                     # an "official" running loop in the asyncio sense.
                     if self._loop is None or self._loop.is_closed():
                         return
-                    self._loop.create_task(
-                        self._handle_blocked_request(tab, interception_id, url)
-                    )
+                    self._loop.create_task(self._handle_blocked_request(tab, interception_id, url))
 
             conn.on_event("Network.requestIntercepted", on_intercepted_request)
 
@@ -2033,9 +2018,7 @@ class Browser:
             logger.warning("Tracker blocklist setup error: %s", e)
             return False
 
-    async def _handle_blocked_request(
-        self, tab: Tab, interception_id: str, url: str
-    ) -> bool:
+    async def _handle_blocked_request(self, tab: Tab, interception_id: str, url: str) -> bool:
         """
         Handle a network request intercepted by CDP.
 
@@ -2156,14 +2139,10 @@ class Browser:
                     )
                     if title_result:
                         tab.title = (
-                            title_result.get("result", {}).get("value", tab.title)
-                            or tab.title
+                            title_result.get("result", {}).get("value", tab.title) or tab.title
                         )
                     if url_result:
-                        tab.url = (
-                            url_result.get("result", {}).get("value", tab.url)
-                            or tab.url
-                        )
+                        tab.url = url_result.get("result", {}).get("value", tab.url) or tab.url
                 return result.get("frameId", "")
             finally:
                 pass
@@ -2199,16 +2178,12 @@ class Browser:
             Unlike `navigate()`, this method creates a new tab and waits for the page to load.
             Use this when you want to ensure the page is fully loaded before proceeding.
         """
-        self._record_action(
-            "goto", url=url, timeout=timeout, page_load_timeout=page_load_timeout
-        )
+        self._record_action("goto", url=url, timeout=timeout, page_load_timeout=page_load_timeout)
         token = self._record_depth.set(self._record_depth.get() + 1)
 
         # Resolve timeouts
         cdp_timeout = self._resolve_timeout(timeout)
-        load_timeout = (
-            page_load_timeout if page_load_timeout is not None else cdp_timeout
-        )
+        load_timeout = page_load_timeout if page_load_timeout is not None else cdp_timeout
 
         try:
             tab = self.new_tab(url)
@@ -2308,9 +2283,7 @@ class Browser:
         Returns:
             True if found, False if timeout
         """
-        self._record_action(
-            "wait_for", selector=selector, text=text, tab=tab, timeout=timeout
-        )
+        self._record_action("wait_for", selector=selector, text=text, tab=tab, timeout=timeout)
         token = self._record_depth.set(self._record_depth.get() + 1)
         resolved_tab = self._resolve_tab(tab)
         try:
@@ -2364,9 +2337,7 @@ class Browser:
 
         Note: Either url or pattern must be provided, not both.
         """
-        self._record_action(
-            "wait_for_url", url=url, pattern=pattern, tab=tab, timeout=timeout
-        )
+        self._record_action("wait_for_url", url=url, pattern=pattern, tab=tab, timeout=timeout)
         token = self._record_depth.set(self._record_depth.get() + 1)
         resolved_tab = self._resolve_tab(tab)
         try:
@@ -2383,9 +2354,7 @@ class Browser:
             start = time.time()
             while time.time() - start <= timeout:
                 try:
-                    current_url = self.evaluate(
-                        "window.location.href", tab=resolved_tab
-                    )
+                    current_url = self.evaluate("window.location.href", tab=resolved_tab)
                     if url and current_url == url:
                         return True
                     if compiled_pattern and compiled_pattern.search(current_url):
@@ -2416,9 +2385,7 @@ class Browser:
         Returns:
             True if element became visible, False if timeout
         """
-        self._record_action(
-            "wait_for_selector_visible", selector=selector, timeout=timeout
-        )
+        self._record_action("wait_for_selector_visible", selector=selector, timeout=timeout)
         token = self._record_depth.set(self._record_depth.get() + 1)
         try:
             escaped = escape_js_string(selector)
@@ -2463,9 +2430,7 @@ class Browser:
         Returns:
             True if element became hidden, False if timeout
         """
-        self._record_action(
-            "wait_for_selector_hidden", selector=selector, timeout=timeout
-        )
+        self._record_action("wait_for_selector_hidden", selector=selector, timeout=timeout)
         token = self._record_depth.set(self._record_depth.get() + 1)
         try:
             escaped = escape_js_string(selector)
@@ -2551,9 +2516,7 @@ class Browser:
             True if navigation completed, False if timeout
         """
         resolved_tab = self._resolve_tab(tab)
-        return self.wait_for_load_state(
-            state=wait_until, tab=resolved_tab, timeout=timeout
-        )
+        return self.wait_for_load_state(state=wait_until, tab=resolved_tab, timeout=timeout)
 
     # ─────────────────────────────────────────────────────────────────────────────
     # Accessibility Tree
@@ -2733,7 +2696,7 @@ class Browser:
             AXNode if found, None otherwise
         """
         tree = self.accessibility_tree(tab)
-        for node in [tree] + self._flatten_tree(tree):
+        for node in [tree, *self._flatten_tree(tree)]:
             if node.ref == ref or node.ref == ref.lstrip("axnode@"):
                 return node
         return None
@@ -2847,9 +2810,7 @@ class Browser:
         """
         links = self.get_links(tab)
         if text_contains:
-            links = [
-                link for link in links if text_contains.lower() in link["text"].lower()
-            ]
+            links = [link for link in links if text_contains.lower() in link["text"].lower()]
         return links
 
     # ─────────────────────────────────────────────────────────────────────────────
@@ -2937,9 +2898,7 @@ class Browser:
             True if clicked, False if not found
         """
         _validate_ref(ref)
-        self._record_action(
-            "click", ref=ref, timeout=timeout, double=double, button=button
-        )
+        self._record_action("click", ref=ref, timeout=timeout, double=double, button=button)
         token = self._record_depth.set(self._record_depth.get() + 1)
 
         async def _click_async(target_tab: Tab | None = None) -> bool:
@@ -2994,12 +2953,8 @@ class Browser:
 
                             if content and len(content) >= 8:
                                 # Calculate center of the node
-                                x = (
-                                    content[0] + content[2] + content[4] + content[6]
-                                ) / 4
-                                y = (
-                                    content[1] + content[3] + content[5] + content[7]
-                                ) / 4
+                                x = (content[0] + content[2] + content[4] + content[6]) / 4
+                                y = (content[1] + content[3] + content[5] + content[7]) / 4
 
                                 # Perform native-like click via Input
                                 # A double click requires two complete press/release cycles:
@@ -3099,9 +3054,7 @@ class Browser:
                 # Fallback: click by text if we found a name for the node
                 if node_name:
                     # Call click_by_text and await if it returns a Task
-                    result = self.click_by_text(
-                        node_name, tab=target_tab, timeout=timeout
-                    )
+                    result = self.click_by_text(node_name, tab=target_tab, timeout=timeout)
                     if asyncio.iscoroutine(result) or asyncio.isfuture(result):
                         return await result
                     return result
@@ -3212,9 +3165,7 @@ class Browser:
             # Fallback: type by name/placeholder/id if we found a name
             if node_name:
                 # Call type_by_name and await if it returns a Task
-                result = self.type_by_name(
-                    node_name, text, tab=target_tab, timeout=timeout
-                )
+                result = self.type_by_name(node_name, text, tab=target_tab, timeout=timeout)
                 if asyncio.iscoroutine(result) or asyncio.isfuture(result):
                     return await result
                 return result
@@ -3328,9 +3279,7 @@ class Browser:
         finally:
             self._record_depth.reset(token)
 
-    def hover(
-        self, ref: str, tab: Tab | None = None, timeout: float | None = None
-    ) -> bool:
+    def hover(self, ref: str, tab: Tab | None = None, timeout: float | None = None) -> bool:
         """
         Hover over element by accessibility ref.
 
@@ -3510,9 +3459,7 @@ class Browser:
             True if all characters typed, False if element not found
         """
         _validate_ref(ref)
-        self._record_action(
-            "type_slowly", ref=ref, text=text, delay=delay, timeout=timeout
-        )
+        self._record_action("type_slowly", ref=ref, text=text, delay=delay, timeout=timeout)
         token = self._record_depth.set(self._record_depth.get() + 1)
 
         async def _type_slowly_async(target_tab: Tab | None = None) -> bool:
@@ -3617,9 +3564,7 @@ class Browser:
         async def _fill() -> dict[str, bool]:
             try:
                 conn = await self._get_connection(tab)
-                await self._send_cdp(
-                    conn, "Runtime.enable", timeout=timeout or self.timeout
-                )
+                await self._send_cdp(conn, "Runtime.enable", timeout=timeout or self.timeout)
 
                 results = {}
                 for label_or_name, value in fields.items():
@@ -3636,11 +3581,7 @@ class Browser:
                     )
                     # Runtime.evaluate returns {"result": {"type": "boolean", "value": ...}}
                     result_data = res.get("result", {})
-                    success = (
-                        result_data.get("value")
-                        if isinstance(result_data, dict)
-                        else False
-                    )
+                    success = result_data.get("value") if isinstance(result_data, dict) else False
                     results[label_or_name] = bool(success)
 
                 # Track failures with reasons
@@ -3665,9 +3606,7 @@ class Browser:
     # Device Emulation
     # ─────────────────────────────────────────────────────────────────────────────
 
-    def emulate_device(
-        self, device: str | dict | None = None, tab: Tab | None = None
-    ) -> None:
+    def emulate_device(self, device: str | dict | None = None, tab: Tab | None = None) -> None:
         """
         Emulate a mobile device or disable emulation.
 
@@ -3836,9 +3775,7 @@ class Browser:
     # Screenshots & Content
     # ─────────────────────────────────────────────────────────────────────────────
 
-    def screenshot(
-        self, path: str, tab: Tab | None = None, timeout: float | None = None
-    ) -> str:
+    def screenshot(self, path: str, tab: Tab | None = None, timeout: float | None = None) -> str:
         """
         Take screenshot and save to path.
 
@@ -3915,16 +3852,14 @@ class Browser:
         if threshold < 0.0:
             raise ValueError(f"threshold must be >= 0.0, got {threshold}")
         if threshold > 100.0:
-            raise ValueError(
-                f"threshold must be <= 100.0 (percentage), got {threshold}"
-            )
+            raise ValueError(f"threshold must be <= 100.0 (percentage), got {threshold}")
 
         if not os.path.exists(baseline):
             raise FileNotFoundError(f"Baseline screenshot not found: {baseline}")
         if not os.path.exists(current):
             raise FileNotFoundError(f"Current screenshot not found: {current}")
 
-        np, Image = self._import_image_deps()  # noqa: N806
+        np, Image = self._import_image_deps()
 
         # Baseline image
         with Image.open(baseline) as b:
@@ -3956,9 +3891,7 @@ class Browser:
         diff_mask = np.any(diff > 0, axis=2)
         diff_pixels = int(np.sum(diff_mask))
         total_pixels = baseline_arr.shape[0] * baseline_arr.shape[1]
-        diff_percentage = (
-            (diff_pixels / total_pixels) * 100 if total_pixels > 0 else 0.0
-        )
+        diff_percentage = (diff_pixels / total_pixels) * 100 if total_pixels > 0 else 0.0
 
         match = diff_percentage <= threshold
 
@@ -3975,7 +3908,9 @@ class Browser:
                 diff_arr[diff_mask] = [255, 0, 0]  # Red for differences
                 Image.fromarray(diff_arr).save(output_diff)
 
-        message = f"Visual match: {match} ({diff_percentage:.2f}% different, {diff_pixels} pixels differ)"
+        message = (
+            f"Visual match: {match} ({diff_percentage:.2f}% different, {diff_pixels} pixels differ)"
+        )
 
         return ComparisonResult(
             match=match,
@@ -4045,7 +3980,7 @@ class Browser:
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
             current_path = tmp.name
 
-        np, Image = self._import_image_deps()  # noqa: N806
+        _, Image = self._import_image_deps()
 
         try:
             self.screenshot(current_path)
@@ -4211,9 +4146,7 @@ class Browser:
 
         return self._run_async(_html())
 
-    def evaluate(
-        self, script: str, tab: Tab | None = None, timeout: float | None = None
-    ) -> Any:
+    def evaluate(self, script: str, tab: Tab | None = None, timeout: float | None = None) -> Any:
         """
         Execute JavaScript and return result.
 
@@ -4242,9 +4175,7 @@ class Browser:
 
         return self._run_async(_eval())
 
-    def execute(
-        self, script: str, tab: Tab | None = None, timeout: float | None = None
-    ) -> Any:
+    def execute(self, script: str, tab: Tab | None = None, timeout: float | None = None) -> Any:
         """
         Execute JavaScript and return result.
 
@@ -4264,9 +4195,7 @@ class Browser:
     # Cookies
     # ─────────────────────────────────────────────────────────────────────────────
 
-    def get_cookies(
-        self, urls: list[str] | None = None, tab: Tab | None = None
-    ) -> list[dict]:
+    def get_cookies(self, urls: list[str] | None = None, tab: Tab | None = None) -> list[dict]:
         """
         Get all cookies visible to the page.
 
@@ -4298,9 +4227,7 @@ class Browser:
         async def _get() -> list[dict]:
             conn = await self._get_connection(tab)
             await self._send_cdp(conn, "Network.enable", domains=["Network"])
-            result = await self._send_cdp(
-                conn, "Network.getCookies", {}, domains=["Network"]
-            )
+            result = await self._send_cdp(conn, "Network.getCookies", {}, domains=["Network"])
             return result.get("cookies", [])
 
         return self._run_async(_get())
@@ -4380,9 +4307,7 @@ class Browser:
                                 domains=["Runtime"],
                             )
                             current_url = (
-                                result.get("result", {})
-                                .get("result", {})
-                                .get("value", "")
+                                result.get("result", {}).get("result", {}).get("value", "")
                             )
                     break
 
@@ -4555,14 +4480,10 @@ class Browser:
         """Internal method to get cookies without wrapping in _run_async."""
         conn = await self._get_connection(tab)
         await self._send_cdp(conn, "Network.enable", domains=["Network"])
-        result = await self._send_cdp(
-            conn, "Network.getCookies", {}, domains=["Network"]
-        )
+        result = await self._send_cdp(conn, "Network.getCookies", {}, domains=["Network"])
         return result.get("cookies", [])
 
-    async def _set_cookies_internal(
-        self, cookies: list[dict], tab: Tab | None = None
-    ) -> None:
+    async def _set_cookies_internal(self, cookies: list[dict], tab: Tab | None = None) -> None:
         """Internal method to set cookies without wrapping in _run_async."""
         conn = await self._get_connection(tab)
         await self._send_cdp(conn, "Network.enable", domains=["Network"])
@@ -4842,8 +4763,7 @@ class Browser:
         valid = {"basic", "balanced", "aggressive"}
         if mode not in valid:
             raise ValueError(
-                f"Invalid stealth mode: {mode!r}. "
-                f"Valid options: {', '.join(sorted(valid))}"
+                f"Invalid stealth mode: {mode!r}. Valid options: {', '.join(sorted(valid))}"
             )
 
         self._stealth_mode = mode
@@ -4892,9 +4812,7 @@ class Browser:
             window_webdriver = self.evaluate("window.webdriver", tab=tab)
 
             # Check chrome.runtime
-            has_chrome_runtime = self.evaluate(
-                "window.chrome && window.chrome.runtime", tab=tab
-            )
+            has_chrome_runtime = self.evaluate("window.chrome && window.chrome.runtime", tab=tab)
 
             # Check CDP marker
             has_cdc = self.evaluate(

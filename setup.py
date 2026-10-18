@@ -8,7 +8,7 @@ from setuptools import setup
 # Minimum Python version required (must match requires-python in pyproject.toml)
 _MIN_PYTHON = (3, 10)
 
-if sys.version_info[:2] < _MIN_PYTHON:  # noqa: UP036
+if sys.version_info[:2] < _MIN_PYTHON:
     v = sys.version_info
     print(
         f"ERROR: Python 3.10 or higher is required to install quay.\n"

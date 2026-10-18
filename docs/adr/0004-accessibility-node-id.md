@@ -25,9 +25,12 @@ Always use `backendDOMNodeId` exactly as defined in CDP:
 ```python
 backend_node_id = node.get("backendDOMNodeId")  # Correct
 
-result = await self._send_cdp("DOM.resolveNode", {
-    "backendNodeId": backend_node_id,  # Note: DOM.resolveNode uses backendNodeId
-})
+result = await self._send_cdp(
+    "DOM.resolveNode",
+    {
+        "backendNodeId": backend_node_id,  # Note: DOM.resolveNode uses backendNodeId
+    },
+)
 ```
 
 Note: `DOM.resolveNode` uses `backendNodeId` but accessibility nodes use `backendDOMNodeId`.

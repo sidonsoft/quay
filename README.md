@@ -123,6 +123,7 @@ Monitor reconnection with a callback:
 def on_reconnect(msg):
     print(f"Reconnecting: {msg}")
 
+
 browser = Browser(reconnect_callback=on_reconnect)
 ```
 
@@ -132,14 +133,14 @@ Quay uses a **mixin-based architecture** for maintainability:
 
 ```python
 class Browser(
-    BrowserCoreMixin,        # Connection lifecycle
-    BrowserTabsMixin,        # Tab management
-    BrowserCDPMixin,         # Low-level CDP
+    BrowserCoreMixin,  # Connection lifecycle
+    BrowserTabsMixin,  # Tab management
+    BrowserCDPMixin,  # Low-level CDP
     BrowserNavigationMixin,  # Navigation
-    BrowserWaitMixin,        # Wait methods
+    BrowserWaitMixin,  # Wait methods
     BrowserAccessibilityMixin,  # Accessibility tree
-    BrowserActionsMixin,     # User actions
-    BrowserRecordingMixin,   # Session recording
+    BrowserActionsMixin,  # User actions
+    BrowserRecordingMixin,  # Session recording
 ):
     pass
 ```

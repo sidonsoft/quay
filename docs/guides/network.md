@@ -23,13 +23,16 @@ tab = browser.new_tab("https://example.com")
 def log_request(request):
     print(f"-> {request['request']['method']} {request['request']['url']}")
 
+
 browser.on_request(log_request)
+
 
 # Filter specific requests
 def log_api_calls(request):
-    url = request['request']['url']
-    if '/api/' in url:
+    url = request["request"]["url"]
+    if "/api/" in url:
         print(f"API call: {url}")
+
 
 browser.on_request(log_api_calls)
 ```
@@ -39,17 +42,20 @@ browser.on_request(log_api_calls)
 ```python
 # Log all responses
 def log_response(response):
-    status = response['response']['status']
-    url = response['response']['url']
+    status = response["response"]["status"]
+    url = response["response"]["url"]
     print(f"<- {status} {url}")
+
 
 browser.on_response(log_response)
 
+
 # Filter by status code
 def log_errors(response):
-    status = response['response']['status']
+    status = response["response"]["status"]
     if status >= 400:
         print(f"Error: {status} {response['response']['url']}")
+
 
 browser.on_response(log_errors)
 ```
@@ -59,9 +65,10 @@ browser.on_response(log_errors)
 ```python
 # Log failed requests (network errors, timeouts)
 def log_failed(request):
-    url = request['request']['url']
-    error = request.get('errorText', 'Unknown error')
+    url = request["request"]["url"]
+    error = request.get("errorText", "Unknown error")
     print(f"X Failed: {url} - {error}")
+
 
 browser.on_request_failed(log_failed)
 ```
@@ -71,14 +78,18 @@ browser.on_request_failed(log_failed)
 ```python
 api_calls = []
 
+
 def track_api(response):
-    url = response['response']['url']
-    if '/api/' in url:
-        api_calls.append({
-            'url': url,
-            'status': response['response']['status'],
-            'type': response['response'].get('mimeType', '')
-        })
+    url = response["response"]["url"]
+    if "/api/" in url:
+        api_calls.append(
+            {
+                "url": url,
+                "status": response["response"]["status"],
+                "type": response["response"].get("mimeType", ""),
+            }
+        )
+
 
 browser.on_response(track_api)
 
@@ -96,13 +107,16 @@ import time
 
 pending_requests = set()
 
+
 def track_start(request):
-    request_id = request['requestId']
+    request_id = request["requestId"]
     pending_requests.add(request_id)
 
+
 def track_end(response):
-    request_id = response['requestId']
+    request_id = response["requestId"]
     pending_requests.discard(request_id)
+
 
 browser.on_request(track_start)
 browser.on_response(track_end)
