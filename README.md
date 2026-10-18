@@ -12,7 +12,7 @@
 |---------|------|------------|---------------|---------|
 | Full AX tree (raw CDP nodes) | ✅ | ❌ Simplified snapshot only | ✅ | ❌ |
 | AX ref targeting | ✅ Full CDP refs | ⚠️ aria-snapshot refs, v1.64+ (`get_by_ref`) | ✅ | ❌ |
-| MCP server | ❌ (roadmap) | ✅ | ✅ | ❌ |
+| MCP server | ✅ `quay mcp` | ✅ | ✅ | ❌ |
 | Uses your logged-in Chrome | ✅ | ❌ | ❌ | ✅ |
 | Connection pooling | ✅ | ✅ BrowserContext | ❌ | ❌ |
 | Auto-reconnect | ✅ | ❌ | ❌ | ❌ |
@@ -97,6 +97,29 @@ quay screenshot
 quay click "Submit"
 ```
 
+## MCP Server
+
+Expose quay to MCP-capable agents (Claude Code, Codex, OpenClaw, …):
+
+```bash
+pip install "quay[mcp]"
+quay mcp --port 9222   # serves over stdio
+```
+
+Tools: `browser_status`, `open_tab`, `navigate`, `snapshot`, `click_text`, `click_ref`, `fill_form`, `evaluate`, `screenshot`, `close_tabs`.
+
+Example Claude Code config entry:
+
+```json
+{
+  "mcpServers": {
+    "quay": { "command": "quay", "args": ["mcp", "--port", "9222"] }
+  }
+}
+```
+
+See [MCP guide](docs/guides/mcp.md) for setup details.
+
 ## Features
 
 | Feature | Description |
@@ -109,6 +132,7 @@ quay click "Submit"
 | **Form Filling** | Fill forms by label text |
 | **Click by Text** | Click elements matching visible text |
 | **JavaScript Eval** | Run arbitrary JavaScript |
+| **MCP Server** | `quay mcp` — drive your real Chrome from any MCP agent |
 
 ## Automatic Reconnection
 
