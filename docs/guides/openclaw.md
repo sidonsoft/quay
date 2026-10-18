@@ -27,17 +27,13 @@ Verify: `curl -s localhost:9222/json/version` should print JSON with `"Browser":
 
 ## 2. Install quay with MCP support
 
-⚠️ **Check the version.** The MCP server ships in **quay 0.2.8+** (not yet on PyPI as of writing — PyPI's latest release lags; check with `pip index versions quay`). Install from the repo until a release catches up:
+⚠️ **Check the version.** The MCP server ships in **quay 0.2.8+**:
 
 ```bash
-# Reliable right now:
-pip install "quay[mcp] @ git+https://github.com/sidonsoft/quay"
-
-# Later, once PyPI catches up:
 pip install -U "quay[mcp]"
 ```
 
-Confirm: `python -c "import importlib.metadata as m; print(m.version('quay'))"` must be ≥ 0.2.8.
+If an older quay is installed, upgrade with `-U`. Confirm: `python -c "import importlib.metadata as m; print(m.version('quay'))"` must be ≥ 0.2.8.
 
 Check where it landed: `which quay`. OpenClaw launches the server itself, but a quick manual smoke test saves debugging later:
 
@@ -86,7 +82,7 @@ Expected: `open_tab` → `snapshot` shows `RootWebArea "Example Domain"` → age
 | Chrome opens but agent can't connect (Chrome 144+) | Chrome 144 consent prompt: launch *with* the flags (step 1), or enable `chrome://inspect/#remote-debugging` and click Allow on each connect. |
 | `quay: command not found` in probe | Use `--command /full/path/to/quay` (find it with `which quay`). |
 | Server added but no tools in agent | `openclaw mcp doctor quay --probe` — if it backes off (failed starts retry at 30s→10min doubling), fix the probe first, then reload/retry. |
-| `pip install "quay[mcp]"` extra ignored / no mcp support | PyPI release lags git — install from git (step 2) and verify `importlib.metadata.version('quay')`. |
+| `pip install "quay[mcp]"` extra ignored / no mcp support | Old quay cached — `pip install -U "quay[mcp]"` and verify `importlib.metadata.version('quay')` ≥ 0.2.8. |
 | Tools present but every call says `Error: …` | Chrome was restarted after the server connected (new tab ids) — re-run `browser_status`; it re-discovers tabs. |
 
 ## Security note for OpenClaw setups

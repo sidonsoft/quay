@@ -5,45 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.7] - 2026-03-29
-
-### Fixed
-
-- **Fix 01: ConnectionPool eviction closes WebSocket** — `_evict_oldest()` now properly awaits `conn.disconnect()` instead of just marking disconnected, preventing socket file descriptor leaks.
-- **Fix 05: Screenshot comparison documentation** — Clarified byte-level comparison limitations, removed misleading threshold usage, added note about Pillow for pixel-level diffing.
-- **Fix 07: Wait methods use async evaluate** — Added `_evaluate_async()` for use from async contexts. Fixed `RuntimeError` when sync `evaluate()` called from within `_poll_until()`.
-- **Fix 08: Eager WeakKeyDictionary init** — `_enabled_domains` now initialized via `_init_cdp_mixin()` called from `BrowserCoreMixin.__init__`, preventing race conditions in concurrent access.
-- **Fix 09: find_by_name word-boundary matching** — Added `exact` and `interactive_only` parameters. Substring matches now use word boundaries (e.g., "Sign" no longer matches "Design"). `click_by_text` defaults to `interactive_only=True`.
-- **Fix 10: type_text clears content** — Added `clear=True` parameter (default). Now sends Ctrl+A + Backspace before typing, matching Playwright's `fill()` behavior for intuitive replacement.
-- **Fix 12: CLI context manager** — All CLI commands now use `browser_context()` context manager for proper Browser cleanup and connection pool release.
-- **Fix 13: Consistent CDP parsing** — Fixed `wait_for_load_state()` to use correct `result.result.value` nesting, matching `evaluate()` and `get_html()`.
-
-## [0.2.6] - 2026-03-29
-
-### Fixed
-
-- **CRITICAL: evaluate() return value parsing** — CDP `Runtime.evaluate` returns `{"result": {"result": {"value": ...}}}`. The wrong nesting level caused `evaluate()` to always return `None`. Now correctly extracts `result.result.value`.
-- **HIGH: click_by_text(0,0) fallback removed** — When an AXNode has no bounding box (e.g., `<title>`, `<meta>`), the code silently clicked at viewport origin (0,0), causing unpredictable behavior. Now raises `BrowserError` with helpful message.
-- **Issue #6: Exception swallowing without logging** — All `except Exception: pass` blocks now log at DEBUG level for observability. WebSocket close errors, message parsing errors, callback errors, and health check failures are now logged.
-
-## [0.2.8] - 2026-03-31
-
-### Changed
-
-- **Architecture**: Removed dead mixin stub files (`_browser_core.py`, `_browser_tabs.py`, `_browser_navigation.py`, `_browser_cdp.py`, `_browser_wait.py`, `_browser_actions.py`, `_browser_accessibility.py`, `_browser_recording.py`) — these were an incomplete architectural experiment never wired into `Browser`. `browser.py` is now explicitly monolithic.
-
-### Fixed
-
-- **Spoofing tab leak**: `_inject_spoofing_scripts_async` now closes the `about:blank` temp tab it creates for browser-level injection, preventing tab accumulation over time.
-- **Duplicate spoofing execution**: Removed redundant per-tab script injection from `new_tab()` — scripts are already registered globally via `Page.addScriptToEvaluateOnNewDocument` at browser init.
-- **Dead code**: Deleted 4 unused individual spoofing script injection methods (`_inject_webrtc_spoof_script`, `_inject_media_spoof_script`, `_inject_webgl_spoof_script`, `_inject_font_spoof_script`) and orphaned sync wrapper `_inject_spoofing_scripts_for_tab`.
-
 ## [Unreleased]
+
+_(nothing pending)_
+
+## [0.2.8] - 2026-10-19
 
 ### Added
 
 - **MCP server (`quay mcp`)**: stdio Model Context Protocol server so MCP-capable agents (Claude Code, Codex, OpenClaw, …) can drive the user's real logged-in Chrome through quay. Tools: `browser_status`, `open_tab`, `navigate`, `snapshot`, `click_text`, `click_ref`, `fill_form`, `evaluate`, `screenshot`, `close_tabs`. Optional dependency: `pip install "quay[mcp]"` (mcp SDK 2.x). `--host/--port` accepted before or after the `mcp` subcommand for config ergonomics.
 - **`docs/guides/openclaw.md`**: five-minute guide for wiring `quay mcp` into an OpenClaw agent (`openclaw mcp add` + `doctor --probe`, AGENTS.md pointer, failure table).
+
+### Changed
+
+- **Architecture**: Removed dead mixin stub files (`_browser_core.py`, `_browser_tabs.py`, `_browser_navigation.py`, `_browser_cdp.py`, `_browser_wait.py`, `_browser_actions.py`, `_browser_accessibility.py`, `_browser_recording.py`) — these were an incomplete architectural experiment never wired into `Browser`. `browser.py` is now explicitly monolithic.
+- **Tooling/CI**: single ruff config merged into pyproject.toml (ruff.toml removed), repo cleaned to pass ruff 0.17 (incl. latent `compare_screenshots` np/Image swap fix), CI actions bumped past the Node 20 deprecation, `quay.egg-info/` untracked.
 
 ### Fixed
 
@@ -66,6 +42,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Recording fidelity**: removed `_record_depth.get() > 0` guard from `_record_action` — `_playing_back` already prevents re-recording; the guard was causing sub-actions to be recorded when async operations outlived the depth counter
 - **temp_tab error logging**: replaced silent `suppress(Exception)` with `try/except` + `logger.warning` for cleanup failures
 - **Double-click dispatch sequence**: Chrome `Input.dispatchMouseEvent` now sends two complete press/release cycles (clickCount=1 then 2) instead of incorrectly sending clickCount=2 on both events
+
+- **Spoofing tab leak**: `_inject_spoofing_scripts_async` now closes the `about:blank` temp tab it creates for browser-level injection, preventing tab accumulation over time.
+- **Duplicate spoofing execution**: Removed redundant per-tab script injection from `new_tab()` — scripts are already registered globally via `Page.addScriptToEvaluateOnNewDocument` at browser init.
+- **Dead code**: Deleted 4 unused individual spoofing script injection methods (`_inject_webrtc_spoof_script`, `_inject_media_spoof_script`, `_inject_webgl_spoof_script`, `_inject_font_spoof_script`) and orphaned sync wrapper `_inject_spoofing_scripts_for_tab`.
+
+## [0.2.7] - 2026-03-29
+
+### Fixed
+
+- **Fix 01: ConnectionPool eviction closes WebSocket** — `_evict_oldest()` now properly awaits `conn.disconnect()` instead of just marking disconnected, preventing socket file descriptor leaks.
+- **Fix 05: Screenshot comparison documentation** — Clarified byte-level comparison limitations, removed misleading threshold usage, added note about Pillow for pixel-level diffing.
+- **Fix 07: Wait methods use async evaluate** — Added `_evaluate_async()` for use from async contexts. Fixed `RuntimeError` when sync `evaluate()` called from within `_poll_until()`.
+- **Fix 08: Eager WeakKeyDictionary init** — `_enabled_domains` now initialized via `_init_cdp_mixin()` called from `BrowserCoreMixin.__init__`, preventing race conditions in concurrent access.
+- **Fix 09: find_by_name word-boundary matching** — Added `exact` and `interactive_only` parameters. Substring matches now use word boundaries (e.g., "Sign" no longer matches "Design"). `click_by_text` defaults to `interactive_only=True`.
+- **Fix 10: type_text clears content** — Added `clear=True` parameter (default). Now sends Ctrl+A + Backspace before typing, matching Playwright's `fill()` behavior for intuitive replacement.
+- **Fix 12: CLI context manager** — All CLI commands now use `browser_context()` context manager for proper Browser cleanup and connection pool release.
+- **Fix 13: Consistent CDP parsing** — Fixed `wait_for_load_state()` to use correct `result.result.value` nesting, matching `evaluate()` and `get_html()`.
+
+## [0.2.6] - 2026-03-29
+
+### Fixed
+
+- **CRITICAL: evaluate() return value parsing** — CDP `Runtime.evaluate` returns `{"result": {"result": {"value": ...}}}`. The wrong nesting level caused `evaluate()` to always return `None`. Now correctly extracts `result.result.value`.
+- **HIGH: click_by_text(0,0) fallback removed** — When an AXNode has no bounding box (e.g., `<title>`, `<meta>`), the code silently clicked at viewport origin (0,0), causing unpredictable behavior. Now raises `BrowserError` with helpful message.
+- **Issue #6: Exception swallowing without logging** — All `except Exception: pass` blocks now log at DEBUG level for observability. WebSocket close errors, message parsing errors, callback errors, and health check failures are now logged.
 
 ## [0.2.5] - 2026-03-29
 
