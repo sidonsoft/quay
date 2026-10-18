@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **MCP server (`quay mcp`)**: stdio Model Context Protocol server so MCP-capable agents (Claude Code, Codex, OpenClaw, …) can drive the user's real logged-in Chrome through quay. Tools: `browser_status`, `open_tab`, `navigate`, `snapshot`, `click_text`, `click_ref`, `fill_form`, `evaluate`, `screenshot`, `close_tabs`. Optional dependency: `pip install "quay[mcp]"` (mcp SDK 2.x). `--host/--port` accepted before or after the `mcp` subcommand for config ergonomics.
+
 ### Fixed
 
 - **Chrome 136+/144+ connection guidance**: `Chrome DevTools not reachable` now raises with actionable hints (separate `--user-data-dir` required since 136; `chrome://inspect/#remote-debugging` + consent prompt since 144). README, installation, quickstart, index, and benchmarks docs updated with the required flags and consent-flow explanation.

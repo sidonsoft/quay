@@ -13,6 +13,7 @@ Usage:
     quay close [id]        Close tabs
     quay version           Show Chrome version
     quay run-evals         Run evaluation suite
+    quay mcp               Run MCP server (stdio)
 """
 
 from __future__ import annotations
@@ -173,6 +174,25 @@ def cmd_version(args: argparse.Namespace) -> int:
         return EXIT_ERROR
 
 
+def cmd_mcp(args: argparse.Namespace) -> int:
+    """Run the MCP server over stdio (blocking)."""
+    try:
+        from .mcp_server import run_server
+    except ImportError as e:
+        print_error(f'{e}\nInstall MCP support: pip install "quay[mcp]"')
+        return EXIT_ERROR
+
+    try:
+        run_server(host=args.host, port=args.port)
+        return EXIT_SUCCESS
+    except KeyboardInterrupt:
+        print("\nInterrupted", file=sys.stderr)
+        return EXIT_INTERRUPT
+    except Exception as e:
+        print_error(str(e))
+        return EXIT_ERROR
+
+
 def cmd_run_evals(args: argparse.Namespace) -> int:
     """Run evaluation suite."""
     from .evals import run_evals
@@ -210,6 +230,7 @@ COMMANDS = {
     "close": cmd_close,
     "version": cmd_version,
     "run-evals": cmd_run_evals,
+    "mcp": cmd_mcp,
 }
 
 
@@ -259,6 +280,15 @@ def main(argv: list[str] | None = None) -> int:
 
     # version
     subparsers.add_parser("version", help="Show Chrome version")
+
+    # mcp
+    mcp_parser = subparsers.add_parser(
+        "mcp", help="Run MCP server over stdio (requires: pip install 'quay[mcp]')"
+    )
+    # Accept --host/--port after the subcommand too (MCP configs typically
+    # write ["quay", "mcp", "--port", "9222"]). SUPPRESS keeps global values.
+    mcp_parser.add_argument("--host", default=argparse.SUPPRESS)
+    mcp_parser.add_argument("--port", type=int, default=argparse.SUPPRESS)
 
     # run-evals
     evals_parser = subparsers.add_parser("run-evals", help="Run evaluation suite")
