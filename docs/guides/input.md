@@ -100,11 +100,7 @@ browser.hover(button.ref)
 
 ```python
 # Fill form fields
-browser.fill_form({
-    "Name": "John Doe",
-    "Email": "john@example.com",
-    "Password": "secret123"
-})
+browser.fill_form({"Name": "John Doe", "Email": "john@example.com", "Password": "secret123"})
 
 # Submit form
 browser.press_key("Enter")
@@ -133,12 +129,12 @@ browser.press_key("Enter")
 Currently not directly supported. Use JavaScript:
 
 ```python
-browser.evaluate('''
+browser.evaluate("""
 const source = document.querySelector("#item");
 const target = document.querySelector("#drop-zone");
 source.dispatchEvent(new DragEvent("dragstart"));
 target.dispatchEvent(new DragEvent("drop"));
-''')
+""")
 ```
 
 ### File Upload

@@ -12,7 +12,7 @@ Browser automation tools typically use CSS selectors or XPath:
 page.click('button[data-testid="submit"]')
 
 # Selenium approach
-driver.find_element(By.CSS_SELECTOR, '.submit-btn')
+driver.find_element(By.CSS_SELECTOR, ".submit-btn")
 ```
 
 **Problems with CSS selectors:**

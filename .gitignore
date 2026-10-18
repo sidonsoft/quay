@@ -34,3 +34,5 @@ Thumbs.db
 *.png
 *.jpg
 quay.log
+# Local debugging output
+chrome_debug.log

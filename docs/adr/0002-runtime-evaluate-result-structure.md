@@ -26,10 +26,13 @@ We handle the full CDP response structure explicitly:
 
 ```python
 def evaluate(self, script: str) -> Any:
-    result = self._send_cdp("Runtime.evaluate", {
-        "expression": script,
-        "returnByValue": True,
-    })
+    result = self._send_cdp(
+        "Runtime.evaluate",
+        {
+            "expression": script,
+            "returnByValue": True,
+        },
+    )
     if "exceptionDetails" in result:
         raise CDPError(...)
     inner = result.get("result", {})

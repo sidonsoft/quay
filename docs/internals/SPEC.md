@@ -53,12 +53,12 @@ Raises `ConnectionError` if Chrome is not reachable at the specified port.
 
 ```python
 b = Browser.launch(
-    headless=True,           # Run Chrome in headless mode
-    stealth=True,            # Hide automation signals
-    stealth_mode="basic",    # "basic" | "balanced" | "aggressive"
-    block_trackers=True,     # Block known bot-detection domains
+    headless=True,  # Run Chrome in headless mode
+    stealth=True,  # Hide automation signals
+    stealth_mode="basic",  # "basic" | "balanced" | "aggressive"
+    block_trackers=True,  # Block known bot-detection domains
     port=9222,
-    profile_path=None,       # Persistent profile dir (None = temp)
+    profile_path=None,  # Persistent profile dir (None = temp)
 )
 ```
 

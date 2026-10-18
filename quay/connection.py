@@ -138,9 +138,7 @@ class Connection:
         self._thread_lock = threading.Lock()
         self._message_id = 0
         self._pending: dict[int, asyncio.Future[Any]] = {}
-        self._pending_timestamps: dict[
-            int, float
-        ] = {}  # Track when messages were added
+        self._pending_timestamps: dict[int, float] = {}  # Track when messages were added
         self._receive_task: asyncio.Task[None] | None = None
         self._connected = False
         self._state = ConnectionState.DISCONNECTED
@@ -281,9 +279,7 @@ class Connection:
                                     continue
 
                             # Re-send and resolve the future
-                            res = await self.send(
-                                op.method, op.params, timeout=op.timeout
-                            )
+                            res = await self.send(op.method, op.params, timeout=op.timeout)
                             if not op.future.done():
                                 op.future.set_result(res)
                         except Exception as e:
@@ -500,9 +496,7 @@ class Connection:
             self._event_listeners[method] = []
         self._event_listeners[method].append(callback)
 
-    def off_event(
-        self, method: str, callback: Callable[[dict], None] | None = None
-    ) -> None:
+    def off_event(self, method: str, callback: Callable[[dict], None] | None = None) -> None:
         """
         Unregister callback(s) for a CDP event.
 
@@ -675,9 +669,7 @@ class ConnectionPool:
             return
 
         # Find connection with oldest last_used timestamp
-        oldest_id = min(
-            self._connections.keys(), key=lambda k: self._connections[k].last_used
-        )
+        oldest_id = min(self._connections.keys(), key=lambda k: self._connections[k].last_used)
         conn = self._connections.pop(oldest_id)
 
         # Properly close the WebSocket connection
@@ -685,9 +677,7 @@ class ConnectionPool:
             await conn.disconnect()
             logger.debug("Evicted connection for tab %s", oldest_id)
         except Exception as e:
-            logger.debug(
-                "Error closing evicted connection for tab %s: %s", oldest_id, e
-            )
+            logger.debug("Error closing evicted connection for tab %s: %s", oldest_id, e)
 
     async def get_existing(self, tab_id: str) -> Connection | None:
         """

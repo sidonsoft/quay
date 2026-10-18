@@ -91,9 +91,7 @@ class EvalReport:
             lines.append(f"{suite}: {status}")
 
         lines.append("")
-        lines.append(
-            f"Total: {self.passed_count}/{self.total} PASSED ({self.pass_rate:.1%})"
-        )
+        lines.append(f"Total: {self.passed_count}/{self.total} PASSED ({self.pass_rate:.1%})")
 
         # Add failures if any
         if self.failed_count > 0:
@@ -404,9 +402,7 @@ class EvalRunner:
         # For now, just return the inputs for validation
         return {"inputs": inputs}
 
-    def _validate(
-        self, actual: Any, expected: dict[str, Any]
-    ) -> tuple[bool, str | None]:
+    def _validate(self, actual: Any, expected: dict[str, Any]) -> tuple[bool, str | None]:
         """
         Validate actual against expected.
 
@@ -458,9 +454,7 @@ class EvalRunner:
 
         # Validate found
         if "found" in expected:
-            actual_found = (
-                actual.get("found", False) if isinstance(actual, dict) else False
-            )
+            actual_found = actual.get("found", False) if isinstance(actual, dict) else False
             if actual_found == expected["found"]:
                 return True, None
             return False, f"Expected found={expected['found']}, got {actual_found}"
@@ -477,9 +471,7 @@ class EvalRunner:
 
         # Validate element_role
         if "element_role" in expected:
-            actual_role = (
-                actual.get("element_role", "") if isinstance(actual, dict) else ""
-            )
+            actual_role = actual.get("element_role", "") if isinstance(actual, dict) else ""
             if actual_role == expected["element_role"]:
                 return True, None
             return (
@@ -489,9 +481,7 @@ class EvalRunner:
 
         # Validate root_role
         if "root_role" in expected:
-            actual_role = (
-                actual.get("root_role", "") if isinstance(actual, dict) else ""
-            )
+            actual_role = actual.get("root_role", "") if isinstance(actual, dict) else ""
             if actual_role == expected["root_role"]:
                 return True, None
             return (
@@ -501,9 +491,7 @@ class EvalRunner:
 
         # Validate root_role_pattern (substring match)
         if "root_role_pattern" in expected:
-            actual_role = (
-                actual.get("root_role", "") if isinstance(actual, dict) else ""
-            )
+            actual_role = actual.get("root_role", "") if isinstance(actual, dict) else ""
             pattern = expected["root_role_pattern"]
             if pattern.lower() in actual_role.lower():
                 return True, None

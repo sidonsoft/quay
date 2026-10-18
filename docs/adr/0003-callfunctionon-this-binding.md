@@ -11,10 +11,13 @@ Many implementations incorrectly pass the element as an argument:
 
 ```python
 # WRONG
-self._send_cdp("Runtime.callFunctionOn", {
-    "functionDeclaration": "(element) => element.click()",
-    "arguments": [{"objectId": object_id}],  # WRONG
-})
+self._send_cdp(
+    "Runtime.callFunctionOn",
+    {
+        "functionDeclaration": "(element) => element.click()",
+        "arguments": [{"objectId": object_id}],  # WRONG
+    },
+)
 ```
 
 ## Decision
@@ -23,11 +26,14 @@ The target object is bound to `this`, NOT passed as argument:
 
 ```python
 # CORRECT
-self._send_cdp("Runtime.callFunctionOn", {
-    "functionDeclaration": "function() { this.click(); }",
-    "objectId": object_id,
-    "returnByValue": True,
-})
+self._send_cdp(
+    "Runtime.callFunctionOn",
+    {
+        "functionDeclaration": "function() { this.click(); }",
+        "objectId": object_id,
+        "returnByValue": True,
+    },
+)
 ```
 
 ## Consequences

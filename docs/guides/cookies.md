@@ -22,28 +22,30 @@ cookies = browser.get_cookies(urls=["https://example.com"])
 
 ```python
 # Set a single cookie
-browser.set_cookies([{
-    "name": "session",
-    "value": "abc123",
-    "domain": ".example.com"
-}])
+browser.set_cookies([{"name": "session", "value": "abc123", "domain": ".example.com"}])
 
 # Set multiple cookies
-browser.set_cookies([
-    {"name": "token", "value": "xyz789", "domain": ".example.com"},
-    {"name": "preferences", "value": "{\"theme\":\"dark\"}", "domain": ".example.com"}
-])
+browser.set_cookies(
+    [
+        {"name": "token", "value": "xyz789", "domain": ".example.com"},
+        {"name": "preferences", "value": '{"theme":"dark"}', "domain": ".example.com"},
+    ]
+)
 
 # Set with full options
-browser.set_cookies([{
-    "name": "session",
-    "value": "abc123",
-    "domain": ".example.com",
-    "path": "/",
-    "secure": True,
-    "httpOnly": True,
-    "expires": 1735689600
-}])
+browser.set_cookies(
+    [
+        {
+            "name": "session",
+            "value": "abc123",
+            "domain": ".example.com",
+            "path": "/",
+            "secure": True,
+            "httpOnly": True,
+            "expires": 1735689600,
+        }
+    ]
+)
 ```
 
 ## Delete Cookies

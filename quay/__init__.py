@@ -37,14 +37,14 @@ from .models import Tab
 logging.basicConfig(level=logging.WARNING)
 
 __all__ = [
-    "Browser",
-    "Tab",
     "AXNode",
-    "BrowserInfo",
-    "ComparisonResult",
+    "Browser",
     "BrowserError",
+    "BrowserInfo",
     "CDPError",
+    "ComparisonResult",
     "ConnectionError",
+    "Tab",
     "TabError",
     "TimeoutError",
     "__version__",

@@ -62,10 +62,10 @@ Get the full Chrome AX tree. Returns `AXNode`.
 
 ```python
 tree = browser.accessibility_tree()
-tree.find("42")              # By ref
+tree.find("42")  # By ref
 tree.find_by_role("button")  # By role
 tree.find_by_name("Submit")  # By name (case-insensitive)
-tree.find_interactive()      # All interactive elements
+tree.find_interactive()  # All interactive elements
 ```
 
 ## Actions

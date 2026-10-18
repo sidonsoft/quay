@@ -45,11 +45,7 @@ result = browser.assert_visual_match("baseline.png", threshold=0.5)
 When a comparison fails, use `output_diff` to generate a diff image where differences are highlighted in red.
 
 ```python
-result = browser.compare_screenshots(
-    "baseline.png",
-    "current.png",
-    output_diff="diff.png"
-)
+result = browser.compare_screenshots("baseline.png", "current.png", output_diff="diff.png")
 ```
 
 ## Partial Comparison (Regions)
@@ -58,11 +54,7 @@ Compare a specific part of the page using the `region` parameter.
 
 ```python
 # Compare a 500x400 area starting at (100, 100)
-result = browser.compare_screenshots(
-    "baseline.png",
-    "current.png",
-    region=(100, 100, 500, 400)
-)
+result = browser.compare_screenshots("baseline.png", "current.png", region=(100, 100, 500, 400))
 ```
 
 ## CI/CD Workflow

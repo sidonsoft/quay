@@ -78,13 +78,22 @@ select = [
   "RUF",    # ruff-specific rules
 ]
 ignore = [
-  "B008",   # do not perform function calls in argument defaults
-  "C901",   # too complex
+  "B008",     # do not perform function calls in argument defaults
+  "C901",     # too complex
   "ASYNC210", # explicit async for concurrency - warn only
+  "E501",     # line too long (formatter handles)
+  "F401",     # unused imports (re-export patterns)
+  "B904",     # raise without from inside except
+  "SIM105",   # contextlib.suppress
+  "SIM108",   # ternary operator
+  "SIM102",   # nested if
+  "ASYNC230", # blocking file I/O in async fns: small local files, not worth asyncio.to_thread
+  "ASYNC240", # os.path checks in async fns: cheap sync stat calls
 ]
 
 [tool.ruff.lint.isort]
 known-first-party = ["quay"]
+force-single-line = true
 
 [tool.ruff.format]
 quote-style = "double"

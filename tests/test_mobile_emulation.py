@@ -19,9 +19,7 @@ async def test_emulate_device_methods_exist():
 
     # Verify methods exist
     assert hasattr(browser, "emulate_device"), "emulate_device method should exist"
-    assert hasattr(browser, "get_emulated_device"), (
-        "get_emulated_device method should exist"
-    )
+    assert hasattr(browser, "get_emulated_device"), "get_emulated_device method should exist"
 
     await browser.aclose()
 

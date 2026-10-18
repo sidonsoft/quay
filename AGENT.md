@@ -24,10 +24,10 @@ ruff check .
 ruff format .
 
 # Type check
-mypy quay/ --strict
+ty check quay/
 
 # All validation
-ruff check . && ruff format --check . && mypy quay/ --strict && pytest tests/ -v
+ruff check . && ruff format --check . && ty check quay/ && pytest tests/ -v
 ```
 
 ## Common Tasks

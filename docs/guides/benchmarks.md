@@ -54,6 +54,7 @@ python benchmarks/compare.py results/*.json
 ```python
 from benchmarks.scenarios.base import BaseScenario
 
+
 class CustomScenario(BaseScenario):
     def run(self, browser, page_url):
         with self.timer("total_interaction"):

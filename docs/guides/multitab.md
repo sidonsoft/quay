@@ -52,11 +52,9 @@ data = []
 for url in urls:
     with browser.temp_tab(url) as tab:
         browser.wait_for_load_state()
-        data.append({
-            "url": url,
-            "title": tab.title,
-            "tree": browser.accessibility_tree().to_dict()
-        })
+        data.append(
+            {"url": url, "title": tab.title, "tree": browser.accessibility_tree().to_dict()}
+        )
 ```
 
 ### Monitoring Background Changes

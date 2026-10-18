@@ -75,7 +75,7 @@ The core package has minimal dependencies:
 Development dependencies:
 
 ```bash
-pip install -e ".[dev]"  # Includes pytest, ruff, mypy
+pip install -e ".[dev]"  # Includes pytest, ruff, ty
 ```
 
 ## Troubleshooting

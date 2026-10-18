@@ -186,10 +186,7 @@ except BrowserError as e:
 
 ```python
 # Send raw CDP commands
-result = browser.send_cdp(
-    "Page.navigate",
-    {"url": "https://example.com"}
-)
+result = browser.send_cdp("Page.navigate", {"url": "https://example.com"})
 
 # Low-level connection access
 conn = await browser._get_connection(tab)
